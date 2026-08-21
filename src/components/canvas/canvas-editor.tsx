@@ -60,7 +60,6 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
 
   // Modals
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
-  const [isGDriveModalOpen, setIsGDriveModalOpen] = useState(false);
   const [canvasBg, setCanvasBg] = useState<string>(board.data?.appState?.viewBackgroundColor || '#090d16');
 
   const handleCanvasBgChange = (color: string) => {
@@ -71,8 +70,27 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
           viewBackgroundColor: color,
         },
       });
+      const currentElements = excalidrawAPI.getSceneElements();
+      const currentAppState = excalidrawAPI.getAppState();
+      saveNow({
+        elements: Array.from(currentElements),
+        appState: {
+          ...currentAppState,
+          viewBackgroundColor: color,
+        },
+      });
     }
   };
+
+  useEffect(() => {
+    if (excalidrawAPI && canvasBg) {
+      excalidrawAPI.updateScene({
+        appState: {
+          viewBackgroundColor: canvasBg,
+        },
+      });
+    }
+  }, [excalidrawAPI, canvasBg]);
 
   // Memoized safe elements and appState for Excalidraw initialization
   const safeElements = React.useMemo(() => {
@@ -126,7 +144,7 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
 
   // Auto-fit content when API is ready
   useEffect(() => {
-    if (excalidrawAPI && board.data.elements && board.data.elements.length > 0) {
+    if (excalidrawAPI && Array.isArray(board?.data?.elements) && board.data.elements.length > 0) {
       setTimeout(() => {
         try {
           excalidrawAPI.scrollToContent(board.data.elements, {
@@ -138,10 +156,12 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
         }
       }, 300);
     }
-  }, [excalidrawAPI, board.data.elements]);
+  }, [excalidrawAPI, board?.data?.elements]);
 
   // Autosave hook
   const { saveStatus, triggerAutosave, saveNow } = useAutosave(board.id, 1000);
+
+
 
   // Excalidraw helpers (dynamically imported when exporting images)
   const exportToBlobRef = useRef<any>(null);
@@ -858,13 +878,14 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
         <DiagramPalette onInsertShape={handleInsertPaletteShape} />
 
         {/* Excalidraw Canvas Area */}
-        <div className="flex-1 h-full relative overflow-hidden">
+        <div className="flex-1 h-full relative overflow-hidden transition-colors duration-200" style={{ backgroundColor: canvasBg }}>
           <Excalidraw
             excalidrawAPI={(api: any) => setExcalidrawAPI(api)}
             initialData={{
               elements: safeElements,
               appState: safeAppState,
               files: board?.data?.files || {},
+              libraryItems: [],
             }}
             onChange={handleChange}
             theme="dark"
