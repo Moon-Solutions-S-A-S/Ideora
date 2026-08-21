@@ -186,16 +186,10 @@ export default function DashboardPage() {
           {/* Quick Workspaces Pill Row */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
                 <Folder className="w-4 h-4 text-violet-400" />
                 {t('dash_workspaces')}
               </h2>
-              <button
-                onClick={() => setIsNewWorkspaceOpen(true)}
-                className="text-xs text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1"
-              >
-                <Plus className="w-3.5 h-3.5" /> {t('dash_new_workspace')}
-              </button>
             </div>
 
             <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none">
