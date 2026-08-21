@@ -2,6 +2,7 @@ import { Board, BoardSummary, CanvasData } from '@/types/board';
 import { Workspace } from '@/types/workspace';
 import { UserProfile } from '@/types/user';
 import { createClient } from '@/lib/supabase/client';
+import { GoogleDriveService } from '@/lib/google-drive/client';
 import { nanoid } from 'nanoid';
 
 const STORAGE_KEYS = {
@@ -525,6 +526,16 @@ export class IdeoraStore {
     }
 
     setItem(STORAGE_KEYS.BOARDS, boards);
+    
+    // Auto sync to Google Drive if connected
+    if (typeof window !== 'undefined' && GoogleDriveService.isConnected()) {
+      try {
+        GoogleDriveService.saveBoardToDrive(id, boards[index].name, JSON.stringify({ name: boards[index].name, data }));
+      } catch (e) {
+        console.error('Google Drive auto sync error:', e);
+      }
+    }
+
     return boards[index];
   }
 
@@ -555,6 +566,10 @@ export class IdeoraStore {
     const boards = await this.getBoards(true);
     const updated = boards.map((b) => (b.id === id ? { ...b, deletedAt: now } : b));
     setItem(STORAGE_KEYS.BOARDS, updated);
+
+    if (typeof window !== 'undefined' && GoogleDriveService.isConnected()) {
+      GoogleDriveService.deleteFileFromDrive(id);
+    }
   }
 
   static async restoreBoard(id: string): Promise<void> {
@@ -577,5 +592,9 @@ export class IdeoraStore {
     const boards = await this.getBoards(true);
     const filtered = boards.filter((b) => b.id !== id);
     setItem(STORAGE_KEYS.BOARDS, filtered);
+
+    if (typeof window !== 'undefined' && GoogleDriveService.isConnected()) {
+      GoogleDriveService.deleteFileFromDrive(id);
+    }
   }
 }

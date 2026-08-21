@@ -84,17 +84,26 @@ export function BoardCard({
 
         <div className="flex items-center gap-1">
           {!isDeleted && (
-            <button
-              onClick={() => onToggleFavorite(board.id)}
-              className={`p-1.5 rounded-lg transition-colors ${
-                board.isFavorite
-                  ? 'text-amber-400 hover:bg-amber-400/10'
-                  : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
-              }`}
-              title={board.isFavorite ? 'Quitar de favoritos' : 'Marcar como favorito'}
-            >
-              <Star className="w-4 h-4 fill-current" />
-            </button>
+            <>
+              <button
+                onClick={() => onToggleFavorite(board.id)}
+                className={`p-1.5 rounded-lg transition-colors ${
+                  board.isFavorite
+                    ? 'text-amber-400 hover:bg-amber-400/10'
+                    : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
+                }`}
+                title={board.isFavorite ? 'Quitar de favoritos' : 'Marcar como favorito'}
+              >
+                <Star className="w-4 h-4 fill-current" />
+              </button>
+              <button
+                onClick={() => onSoftDelete(board.id)}
+                className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                title="Eliminar tablero"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </>
           )}
 
           {/* Menu popup */}

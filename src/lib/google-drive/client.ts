@@ -98,6 +98,24 @@ export class GoogleDriveService {
     return { fileId, modifiedTime: now };
   }
 
+  // Delete file from Google Drive
+  static async deleteFileFromDrive(boardId: string): Promise<boolean> {
+    const session = this.getSession();
+    if (!session.connected) return false;
+
+    const driveKey = `ideora_gdrive_files`;
+    const existingRaw = localStorage.getItem(driveKey);
+    if (!existingRaw) return false;
+    const files: Record<string, any> = JSON.parse(existingRaw);
+
+    if (files[boardId]) {
+      delete files[boardId];
+      localStorage.setItem(driveKey, JSON.stringify(files));
+      return true;
+    }
+    return false;
+  }
+
   // Fetch list of files in Google Drive /Ideora folder
   static async listDriveFiles(): Promise<DriveBoardFile[]> {
     const session = this.getSession();
