@@ -188,9 +188,15 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
     const files = excalidrawAPI.getFiles();
 
     try {
+      const currentBg = appState.viewBackgroundColor || canvasBg || '#090d16';
       const blob = await exportToBlobRef.current({
         elements,
-        appState: { ...appState, exportBackground: true },
+        appState: {
+          ...appState,
+          viewBackgroundColor: currentBg,
+          exportBackground: true,
+          exportPadding: 30,
+        },
         files,
         mimeType: 'image/png',
       });
@@ -212,9 +218,15 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
     const files = excalidrawAPI.getFiles();
 
     try {
+      const currentBg = appState.viewBackgroundColor || canvasBg || '#090d16';
       const svg = await exportToSvgRef.current({
         elements,
-        appState: { ...appState, exportBackground: true },
+        appState: {
+          ...appState,
+          viewBackgroundColor: currentBg,
+          exportBackground: true,
+          exportPadding: 30,
+        },
         files,
       });
       const svgString = new XMLSerializer().serializeToString(svg);
