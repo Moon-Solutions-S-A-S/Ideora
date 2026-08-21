@@ -345,19 +345,23 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
         break;
 
       case 'basic_arrow':
-        newElements = [
-          {
-            id: `arr_${ts}`,
-            type: 'arrow',
-            x: cx - 75,
-            y: cy,
-            width: 150,
-            height: 0,
-            points: [[0, 0], [150, 0]],
-            strokeColor: '#a855f7',
-            strokeWidth: 2,
-          },
-        ];
+        if (excalidrawAPI && typeof excalidrawAPI.setActiveTool === 'function') {
+          excalidrawAPI.setActiveTool({ type: 'arrow' });
+        } else {
+          newElements = [
+            {
+              id: `arr_${ts}`,
+              type: 'arrow',
+              x: cx - 75,
+              y: cy,
+              width: 150,
+              height: 0,
+              points: [[0, 0], [150, 0]],
+              strokeColor: '#a855f7',
+              strokeWidth: 2,
+            },
+          ];
+        }
         break;
 
       case 'flow_process':
