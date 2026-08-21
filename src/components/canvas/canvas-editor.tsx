@@ -398,39 +398,136 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
         }
         break;
 
-      case 'flow_process':
+      // SOFTWARE DEVELOPMENT
+      case 'sw_microservice':
         newElements = [
-          { id: `fp_${ts}`, type: 'rectangle', x: cx - 80, y: cy - 35, width: 160, height: 70, strokeColor: '#10b981', backgroundColor: '#064e3b', fillStyle: 'solid', roundness: { type: 3 }, strokeWidth: 2 },
-          { id: `fpt_${ts}`, type: 'text', x: cx - 55, y: cy - 12, width: 110, height: 24, text: 'Process Step', strokeColor: '#ffffff', fontSize: 16 },
+          { id: `swms_${ts}`, type: 'rectangle', x: cx - 80, y: cy - 35, width: 160, height: 70, strokeColor: '#a855f7', backgroundColor: '#3b0764', fillStyle: 'solid', roundness: { type: 3 }, strokeWidth: 2 },
+          { id: `swmst_${ts}`, type: 'text', x: cx - 65, y: cy - 10, width: 130, height: 20, text: 'Microservice Node', strokeColor: '#ffffff', fontSize: 13 },
         ];
         break;
 
-      case 'flow_decision':
+      case 'sw_api_gateway':
         newElements = [
-          { id: `fd_${ts}`, type: 'diamond', x: cx - 70, y: cy - 55, width: 140, height: 110, strokeColor: '#f59e0b', backgroundColor: '#451a03', fillStyle: 'solid', strokeWidth: 2 },
-          { id: `fdt_${ts}`, type: 'text', x: cx - 40, y: cy - 10, width: 80, height: 20, text: 'Is Valid?', strokeColor: '#ffffff', fontSize: 16 },
+          { id: `swgw_${ts}`, type: 'rectangle', x: cx - 85, y: cy - 35, width: 170, height: 70, strokeColor: '#f43f5e', backgroundColor: '#881337', fillStyle: 'solid', roundness: { type: 3 }, strokeWidth: 2 },
+          { id: `swgwt_${ts}`, type: 'text', x: cx - 65, y: cy - 10, width: 130, height: 20, text: 'API Gateway REST', strokeColor: '#ffffff', fontSize: 13 },
         ];
         break;
 
-      case 'flow_start_end':
+      case 'sw_terminal':
         newElements = [
-          { id: `fse_${ts}`, type: 'rectangle', x: cx - 70, y: cy - 30, width: 140, height: 60, strokeColor: '#14b8a6', backgroundColor: '#042f2e', fillStyle: 'solid', roundness: { type: 3 }, strokeWidth: 2 },
-          { id: `fset_${ts}`, type: 'text', x: cx - 35, y: cy - 10, width: 70, height: 20, text: 'START', strokeColor: '#ffffff', fontSize: 16 },
+          { id: `swt_${ts}`, type: 'rectangle', x: cx - 80, y: cy - 40, width: 160, height: 80, strokeColor: '#10b981', backgroundColor: '#022c22', fillStyle: 'solid', strokeWidth: 2 },
+          { id: `swtt_${ts}`, type: 'text', x: cx - 65, y: cy - 20, width: 130, height: 40, text: '$ npm run build\n✓ Success in 2s', strokeColor: '#34d399', fontSize: 12 },
         ];
         break;
 
+      case 'sw_db':
       case 'flow_db':
       case 'arch_db':
         newElements = [
           { id: `fdb_${ts}`, type: 'rectangle', x: cx - 70, y: cy - 45, width: 140, height: 90, strokeColor: '#06b6d4', backgroundColor: '#164e63', fillStyle: 'solid', roundness: { type: 3 }, strokeWidth: 2 },
-          { id: `fdbt_${ts}`, type: 'text', x: cx - 50, y: cy - 10, width: 100, height: 20, text: 'Database DB', strokeColor: '#ffffff', fontSize: 16 },
+          { id: `fdbt_${ts}`, type: 'text', x: cx - 50, y: cy - 10, width: 100, height: 20, text: 'PostgreSQL DB', strokeColor: '#ffffff', fontSize: 14 },
         ];
         break;
 
-      case 'flow_doc':
+      // HARDWARE & ARDUINO
+      case 'hw_arduino':
         newElements = [
-          { id: `fdoc_${ts}`, type: 'rectangle', x: cx - 65, y: cy - 45, width: 130, height: 90, strokeColor: '#3b82f6', backgroundColor: '#1e3a8a', fillStyle: 'solid', strokeWidth: 2 },
-          { id: `fdoct_${ts}`, type: 'text', x: cx - 45, y: cy - 10, width: 90, height: 20, text: 'Document.pdf', strokeColor: '#ffffff', fontSize: 14 },
+          { id: `ard_${ts}`, type: 'rectangle', x: cx - 90, y: cy - 50, width: 180, height: 100, strokeColor: '#14b8a6', backgroundColor: '#042f2e', fillStyle: 'solid', roundness: { type: 3 }, strokeWidth: 2 },
+          { id: `ardt_${ts}`, type: 'text', x: cx - 75, y: cy - 20, width: 150, height: 40, text: 'Arduino Uno / ESP32\n[GPIO 13 -> HIGH]', strokeColor: '#5eead4', fontSize: 13 },
+        ];
+        break;
+
+      case 'hw_sensor':
+        newElements = [
+          { id: `sen_${ts}`, type: 'ellipse', x: cx - 60, y: cy - 40, width: 120, height: 80, strokeColor: '#f59e0b', backgroundColor: '#451a03', fillStyle: 'solid', strokeWidth: 2 },
+          { id: `sent_${ts}`, type: 'text', x: cx - 45, y: cy - 10, width: 90, height: 20, text: 'Sensor I2C', strokeColor: '#ffffff', fontSize: 13 },
+        ];
+        break;
+
+      case 'hw_actuator':
+        newElements = [
+          { id: `act_${ts}`, type: 'diamond', x: cx - 60, y: cy - 50, width: 120, height: 100, strokeColor: '#ea580c', backgroundColor: '#7c2d12', fillStyle: 'solid', strokeWidth: 2 },
+          { id: `actt_${ts}`, type: 'text', x: cx - 45, y: cy - 10, width: 90, height: 20, text: 'Motor PWM', strokeColor: '#ffffff', fontSize: 13 },
+        ];
+        break;
+
+      case 'hw_chip':
+        newElements = [
+          { id: `chip_${ts}`, type: 'rectangle', x: cx - 70, y: cy - 40, width: 140, height: 80, strokeColor: '#3b82f6', backgroundColor: '#1e3a8a', fillStyle: 'solid', strokeWidth: 2 },
+          { id: `chipt_${ts}`, type: 'text', x: cx - 55, y: cy - 10, width: 110, height: 20, text: 'Microchip IC', strokeColor: '#ffffff', fontSize: 13 },
+        ];
+        break;
+
+      // TELECOM & NETWORKING
+      case 'telecom_router':
+        newElements = [
+          { id: `rtr_${ts}`, type: 'rectangle', x: cx - 80, y: cy - 40, width: 160, height: 80, strokeColor: '#0284c7', backgroundColor: '#0c4a6e', fillStyle: 'solid', roundness: { type: 3 }, strokeWidth: 2 },
+          { id: `rtrt_${ts}`, type: 'text', x: cx - 65, y: cy - 10, width: 130, height: 20, text: 'Router / Switch', strokeColor: '#ffffff', fontSize: 13 },
+        ];
+        break;
+
+      case 'telecom_antenna':
+        newElements = [
+          { id: `ant_${ts}`, type: 'diamond', x: cx - 55, y: cy - 50, width: 110, height: 100, strokeColor: '#6366f1', backgroundColor: '#1e1b4b', fillStyle: 'solid', strokeWidth: 2 },
+          { id: `antt_${ts}`, type: 'text', x: cx - 40, y: cy - 10, width: 80, height: 20, text: 'Antena 5G', strokeColor: '#ffffff', fontSize: 13 },
+        ];
+        break;
+
+      case 'telecom_wifi':
+        newElements = [
+          { id: `wifi_${ts}`, type: 'ellipse', x: cx - 60, y: cy - 40, width: 120, height: 80, strokeColor: '#10b981', backgroundColor: '#064e3b', fillStyle: 'solid', strokeWidth: 2 },
+          { id: `wifit_${ts}`, type: 'text', x: cx - 45, y: cy - 10, width: 90, height: 20, text: 'Wi-Fi / BT', strokeColor: '#ffffff', fontSize: 13 },
+        ];
+        break;
+
+      case 'telecom_firewall':
+        newElements = [
+          { id: `fw_${ts}`, type: 'rectangle', x: cx - 75, y: cy - 35, width: 150, height: 70, strokeColor: '#e11d48', backgroundColor: '#4c0519', fillStyle: 'solid', strokeWidth: 2 },
+          { id: `fwt_${ts}`, type: 'text', x: cx - 55, y: cy - 10, width: 110, height: 20, text: 'Firewall Net', strokeColor: '#ffffff', fontSize: 13 },
+        ];
+        break;
+
+      // AI & DATA
+      case 'ai_model':
+        newElements = [
+          { id: `aim_${ts}`, type: 'rectangle', x: cx - 90, y: cy - 45, width: 180, height: 90, strokeColor: '#a855f7', backgroundColor: '#3b0764', fillStyle: 'solid', roundness: { type: 3 }, strokeWidth: 2 },
+          { id: `aimt_${ts}`, type: 'text', x: cx - 75, y: cy - 15, width: 150, height: 30, text: 'Modelo LLM / IA\n[GPT-4o / Gem]', strokeColor: '#f3e8ff', fontSize: 13 },
+        ];
+        break;
+
+      case 'ai_agent':
+        newElements = [
+          { id: `aia_${ts}`, type: 'rectangle', x: cx - 80, y: cy - 40, width: 160, height: 80, strokeColor: '#ec4899', backgroundColor: '#831843', fillStyle: 'solid', roundness: { type: 3 }, strokeWidth: 2 },
+          { id: `aiat_${ts}`, type: 'text', x: cx - 65, y: cy - 10, width: 130, height: 20, text: 'Agente Autónomo', strokeColor: '#ffffff', fontSize: 13 },
+        ];
+        break;
+
+      case 'ai_pipeline':
+        newElements = [
+          { id: `aip_${ts}`, type: 'rectangle', x: cx - 85, y: cy - 35, width: 170, height: 70, strokeColor: '#059669', backgroundColor: '#064e3b', fillStyle: 'solid', strokeWidth: 2 },
+          { id: `aipt_${ts}`, type: 'text', x: cx - 70, y: cy - 10, width: 140, height: 20, text: 'ETL / Data Pipeline', strokeColor: '#ffffff', fontSize: 13 },
+        ];
+        break;
+
+      // CLOUD & ARCHITECTURE
+      case 'arch_cloud':
+        newElements = [
+          { id: `acld_${ts}`, type: 'ellipse', x: cx - 80, y: cy - 40, width: 160, height: 80, strokeColor: '#38bdf8', backgroundColor: '#075985', fillStyle: 'solid', strokeWidth: 2 },
+          { id: `acldt_${ts}`, type: 'text', x: cx - 60, y: cy - 10, width: 120, height: 20, text: 'Cloud AWS / GCP', strokeColor: '#ffffff', fontSize: 14 },
+        ];
+        break;
+
+      case 'arch_server':
+        newElements = [
+          { id: `asrv_${ts}`, type: 'rectangle', x: cx - 75, y: cy - 40, width: 150, height: 80, strokeColor: '#6366f1', backgroundColor: '#1e1b4b', fillStyle: 'solid', strokeWidth: 2 },
+          { id: `asrvt_${ts}`, type: 'text', x: cx - 55, y: cy - 10, width: 110, height: 20, text: 'Servidor Linux VPS', strokeColor: '#ffffff', fontSize: 14 },
+        ];
+        break;
+
+      case 'arch_s3':
+        newElements = [
+          { id: `s3_${ts}`, type: 'rectangle', x: cx - 75, y: cy - 40, width: 150, height: 80, strokeColor: '#d97706', backgroundColor: '#451a03', fillStyle: 'solid', strokeWidth: 2 },
+          { id: `s3t_${ts}`, type: 'text', x: cx - 55, y: cy - 10, width: 110, height: 20, text: 'Bucket S3 Storage', strokeColor: '#ffffff', fontSize: 13 },
         ];
         break;
 

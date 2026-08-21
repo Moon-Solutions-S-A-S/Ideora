@@ -155,7 +155,7 @@ export function Sidebar({
                       </label>
                     )}
 
-                    {onDeleteWorkspace && workspaces.length > 1 && (
+                    {onDeleteWorkspace && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

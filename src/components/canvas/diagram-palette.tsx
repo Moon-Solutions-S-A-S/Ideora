@@ -20,7 +20,16 @@ import {
   Search,
   Cpu,
   Shield,
-  Workflow
+  Workflow,
+  Radio,
+  Wifi,
+  Zap,
+  Brain,
+  GitBranch,
+  Terminal,
+  HardDrive,
+  Network,
+  Bot
 } from 'lucide-react';
 
 interface DiagramPaletteProps {
@@ -36,9 +45,12 @@ export function DiagramPalette({ onInsertShape }: DiagramPaletteProps) {
   const categories = [
     { id: 'all', label: 'Todas' },
     { id: 'basic', label: 'Básicas' },
-    { id: 'flowchart', label: 'Flujo' },
+    { id: 'software', label: 'Software' },
+    { id: 'hardware', label: 'Arduino / Electrónica' },
+    { id: 'telecom', label: 'Telecom & Redes' },
+    { id: 'ai', label: 'IA & Datos' },
+    { id: 'cloud', label: 'Nube' },
     { id: 'uml', label: 'UML' },
-    { id: 'arch', label: 'Nube' },
   ];
 
   const shapeItems = [
@@ -50,26 +62,39 @@ export function DiagramPalette({ onInsertShape }: DiagramPaletteProps) {
     { id: 'basic_text', category: 'basic', label: 'Caja de Texto', icon: Type, color: 'text-slate-200' },
     { id: 'basic_arrow', category: 'basic', label: 'Flecha Conectora', icon: ArrowRight, color: 'text-purple-400' },
 
-    // FLOWCHART
-    { id: 'flow_process', category: 'flowchart', label: 'Paso de Proceso', icon: Workflow, color: 'text-emerald-400' },
-    { id: 'flow_decision', category: 'flowchart', label: 'Decisión', icon: Diamond, color: 'text-amber-400' },
-    { id: 'flow_start_end', category: 'flowchart', label: 'Inicio / Fin', icon: Circle, color: 'text-teal-400' },
-    { id: 'flow_db', category: 'flowchart', label: 'Base de Datos', icon: Database, color: 'text-cyan-400' },
-    { id: 'flow_doc', category: 'flowchart', label: 'Documento', icon: FileText, color: 'text-blue-400' },
+    // SOFTWARE DEVELOPMENT
+    { id: 'sw_microservice', category: 'software', label: 'Microservicio Node', icon: Cpu, color: 'text-purple-400' },
+    { id: 'sw_api_gateway', category: 'software', label: 'API Gateway REST', icon: Shield, color: 'text-rose-400' },
+    { id: 'sw_terminal', category: 'software', label: 'CLI / Terminal', icon: Terminal, color: 'text-emerald-400' },
+    { id: 'sw_db', category: 'software', label: 'Base de Datos Postgres', icon: Database, color: 'text-cyan-400' },
 
-    // UML & CLASS DIAGRAMS
+    // ELECTRONICS & ARDUINO
+    { id: 'hw_arduino', category: 'hardware', label: 'Arduino / ESP32', icon: Cpu, color: 'text-teal-400' },
+    { id: 'hw_sensor', category: 'hardware', label: 'Sensor I2C / Análogo', icon: Zap, color: 'text-amber-400' },
+    { id: 'hw_actuator', category: 'hardware', label: 'Actuador / Motor PWM', icon: Zap, color: 'text-orange-400' },
+    { id: 'hw_chip', category: 'hardware', label: 'Microcontrolador IC', icon: HardDrive, color: 'text-blue-400' },
+
+    // TELECOM & NETWORKING
+    { id: 'telecom_router', category: 'telecom', label: 'Router / Switch', icon: Network, color: 'text-sky-400' },
+    { id: 'telecom_antenna', category: 'telecom', label: 'Antena 5G / RF', icon: Radio, color: 'text-indigo-400' },
+    { id: 'telecom_wifi', category: 'telecom', label: 'Módulo Wi-Fi / BT', icon: Wifi, color: 'text-emerald-400' },
+    { id: 'telecom_firewall', category: 'telecom', label: 'Firewall de Red', icon: Shield, color: 'text-rose-400' },
+
+    // AI & DATA ENGINEERING
+    { id: 'ai_model', category: 'ai', label: 'Modelo LLM / IA', icon: Brain, color: 'text-purple-400' },
+    { id: 'ai_agent', category: 'ai', label: 'Agente Autónomo', icon: Bot, color: 'text-pink-400' },
+    { id: 'ai_pipeline', category: 'ai', label: 'ETL / Data Pipeline', icon: GitBranch, color: 'text-emerald-400' },
+
+    // CLOUD & ARCHITECTURE
+    { id: 'arch_cloud', category: 'cloud', label: 'Servicio Nube AWS', icon: Cloud, color: 'text-sky-400' },
+    { id: 'arch_server', category: 'cloud', label: 'Servidor VPS Linux', icon: Server, color: 'text-indigo-400' },
+    { id: 'arch_s3', category: 'cloud', label: 'Bucket S3 Storage', icon: HardDrive, color: 'text-amber-400' },
+
+    // UML
     { id: 'uml_class', category: 'uml', label: 'Clase UML', icon: Boxes, color: 'text-pink-400' },
     { id: 'uml_interface', category: 'uml', label: 'Interfaz', icon: Layers, color: 'text-violet-400' },
     { id: 'uml_actor', category: 'uml', label: 'Actor (Usuario)', icon: User, color: 'text-emerald-400' },
     { id: 'uml_usecase', category: 'uml', label: 'Caso de Uso', icon: Circle, color: 'text-teal-400' },
-    { id: 'uml_package', category: 'uml', label: 'Paquete', icon: Boxes, color: 'text-indigo-400' },
-
-    // ARCHITECTURE & CLOUD
-    { id: 'arch_cloud', category: 'arch', label: 'Servicio Nube', icon: Cloud, color: 'text-sky-400' },
-    { id: 'arch_gateway', category: 'arch', label: 'API Gateway', icon: Shield, color: 'text-rose-400' },
-    { id: 'arch_microservice', category: 'arch', label: 'Microservicio', icon: Cpu, color: 'text-purple-400' },
-    { id: 'arch_db', category: 'arch', label: 'Base Datos SQL', icon: Database, color: 'text-emerald-400' },
-    { id: 'arch_server', category: 'arch', label: 'Servidor Backend', icon: Server, color: 'text-indigo-400' },
   ];
 
   const filteredShapes = shapeItems.filter((item) => {

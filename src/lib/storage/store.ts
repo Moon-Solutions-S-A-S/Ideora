@@ -21,177 +21,9 @@ const DEFAULT_USER: UserProfile = {
   createdAt: new Date().toISOString(),
 };
 
-const DEFAULT_WORKSPACES: Workspace[] = [
-  {
-    id: 'ws_uni',
-    ownerId: 'usr_demo_101',
-    name: 'Universidad',
-    description: 'Tableros para materias de ingeniería y algoritmos',
-    color: '#3b82f6',
-    icon: 'graduation-cap',
-    createdAt: new Date(Date.now() - 86400000 * 10).toISOString(),
-    updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-  },
-  {
-    id: 'ws_projects',
-    ownerId: 'usr_demo_101',
-    name: 'Proyectos',
-    description: 'Arquitectura de software y prototipos visuales',
-    color: '#10b981',
-    icon: 'briefcase',
-    createdAt: new Date(Date.now() - 86400000 * 7).toISOString(),
-    updatedAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-  },
-  {
-    id: 'ws_ideas',
-    ownerId: 'usr_demo_101',
-    name: 'Ideas',
-    description: 'Lienzos de lluvia de ideas y conceptos',
-    color: '#ec4899',
-    icon: 'lightbulb',
-    createdAt: new Date(Date.now() - 86400000 * 4).toISOString(),
-    updatedAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-  },
-];
+const DEFAULT_WORKSPACES: Workspace[] = [];
 
-const INITIAL_DEMO_CANVAS_1: CanvasData = {
-  elements: [
-    {
-      id: 'rect1',
-      type: 'rectangle',
-      x: 150,
-      y: 120,
-      width: 220,
-      height: 120,
-      strokeColor: '#6366f1',
-      backgroundColor: '#1e1b4b',
-      fillStyle: 'solid',
-      strokeWidth: 2,
-      roughness: 1,
-      opacity: 100,
-      groupIds: [],
-      roundness: { type: 3 },
-      seed: 12345,
-      version: 2,
-      versionNonce: 1,
-      isDeleted: false,
-      boundElements: null,
-      updated: 1,
-      link: null,
-      locked: false,
-    },
-    {
-      id: 'text1',
-      type: 'text',
-      x: 180,
-      y: 165,
-      width: 160,
-      height: 30,
-      strokeColor: '#ffffff',
-      backgroundColor: 'transparent',
-      fontSize: 20,
-      fontFamily: 1,
-      text: 'Módulo de Auth',
-      textAlign: 'center',
-      verticalAlign: 'middle',
-      baseline: 18,
-      seed: 54321,
-      version: 2,
-      versionNonce: 2,
-      isDeleted: false,
-    },
-    {
-      id: 'arrow1',
-      type: 'arrow',
-      x: 370,
-      y: 180,
-      width: 140,
-      height: 0,
-      strokeColor: '#10b981',
-      strokeWidth: 2,
-      points: [
-        [0, 0],
-        [140, 0],
-      ],
-      seed: 9999,
-      version: 1,
-      isDeleted: false,
-    },
-    {
-      id: 'ellipse1',
-      type: 'ellipse',
-      x: 510,
-      y: 120,
-      width: 200,
-      height: 120,
-      strokeColor: '#10b981',
-      backgroundColor: '#064e3b',
-      fillStyle: 'solid',
-      strokeWidth: 2,
-      seed: 8888,
-      version: 1,
-      isDeleted: false,
-    },
-    {
-      id: 'text2',
-      type: 'text',
-      x: 535,
-      y: 165,
-      width: 150,
-      height: 30,
-      strokeColor: '#ffffff',
-      fontSize: 20,
-      fontFamily: 1,
-      text: 'Supabase DB',
-      textAlign: 'center',
-      verticalAlign: 'middle',
-      seed: 7777,
-      version: 1,
-      isDeleted: false,
-    },
-  ],
-  appState: {
-    viewBackgroundColor: '#090d16',
-    gridSize: 20,
-  },
-  files: {},
-};
-
-const DEFAULT_BOARDS: Board[] = [
-  {
-    id: 'board_sys_auth',
-    workspaceId: 'ws_projects',
-    ownerId: 'usr_demo_101',
-    name: 'Sistema de usuarios y Auth',
-    data: INITIAL_DEMO_CANVAS_1,
-    isFavorite: true,
-    createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-    updatedAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-    deletedAt: null,
-  },
-  {
-    id: 'board_diagram',
-    workspaceId: 'ws_uni',
-    ownerId: 'usr_demo_101',
-    name: 'Diagrama Lógica Matemática',
-    data: { elements: [], appState: { viewBackgroundColor: '#090d16' }, files: {} },
-    isFavorite: false,
-    createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-    updatedAt: new Date(Date.now() - 86400000).toISOString(),
-    deletedAt: null,
-  },
-  {
-    id: 'board_mindmap',
-    workspaceId: 'ws_ideas',
-    ownerId: 'usr_demo_101',
-    name: 'Mapa Mental Startup Ideora',
-    data: { elements: [], appState: { viewBackgroundColor: '#090d16' }, files: {} },
-    isFavorite: true,
-    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-    updatedAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-    deletedAt: null,
-  },
-];
+const DEFAULT_BOARDS: Board[] = [];
 
 // LocalStorage Helper functions
 function getItem<T>(key: string, defaultValue: T): T {
@@ -245,13 +77,7 @@ export class IdeoraStore {
     }
 
     // Local fallback
-    const isInit = getItem<boolean>(STORAGE_KEYS.INITIALIZED, false);
     const local = getItem<Workspace[]>(STORAGE_KEYS.WORKSPACES, []);
-    if (!isInit && local.length === 0) {
-      setItem(STORAGE_KEYS.WORKSPACES, DEFAULT_WORKSPACES);
-      setItem(STORAGE_KEYS.INITIALIZED, true);
-      return DEFAULT_WORKSPACES;
-    }
     return local;
   }
 
@@ -377,13 +203,7 @@ export class IdeoraStore {
     }
 
     // Local fallback
-    const isInit = getItem<boolean>(STORAGE_KEYS.INITIALIZED, false);
     const local = getItem<Board[]>(STORAGE_KEYS.BOARDS, []);
-    if (!isInit) {
-      setItem(STORAGE_KEYS.BOARDS, DEFAULT_BOARDS);
-      setItem(STORAGE_KEYS.INITIALIZED, true);
-      return includeDeleted ? DEFAULT_BOARDS : DEFAULT_BOARDS.filter((b) => !b.deletedAt);
-    }
     return includeDeleted ? local : local.filter((b) => !b.deletedAt);
   }
 
