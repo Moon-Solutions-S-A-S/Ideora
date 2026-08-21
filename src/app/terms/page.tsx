@@ -2,12 +2,12 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ArrowLeft, FileCheck, Scale, AlertCircle } from 'lucide-react';
+import { ArrowLeft, FileCheck, Scale, AlertCircle, Globe } from 'lucide-react';
 import { Footer } from '@/components/layout/footer';
 import { useTranslation } from '@/lib/i18n/language-context';
 
 export default function TermsPage() {
-  const { t } = useTranslation();
+  const { language, setLanguage, t } = useTranslation();
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-200 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden flex flex-col justify-between">
@@ -16,14 +16,25 @@ export default function TermsPage() {
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-4xl mx-auto space-y-8 relative z-10 w-full mb-16">
-        {/* Navigation */}
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl glass-card text-xs font-semibold text-slate-300 hover:text-white transition-all hover:bg-white/10 border border-white/10"
-        >
-          <ArrowLeft className="w-4 h-4 text-indigo-400" />
-          <span>{t('back_to_home')}</span>
-        </Link>
+        {/* Navigation & Language Toggle */}
+        <div className="flex items-center justify-between">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl glass-card text-xs font-semibold text-slate-300 hover:text-white transition-all hover:bg-white/10 border border-white/10"
+          >
+            <ArrowLeft className="w-4 h-4 text-indigo-400" />
+            <span>{t('back_to_home')}</span>
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => setLanguage(language === 'en' ? 'es' : 'en')}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl glass-card text-xs font-semibold text-slate-300 hover:text-white border border-white/10 transition-all hover:bg-white/10"
+          >
+            <Globe className="w-4 h-4 text-indigo-400" />
+            <span className="uppercase">{language === 'en' ? 'ES' : 'EN'}</span>
+          </button>
+        </div>
 
         {/* Header */}
         <div className="glass-panel rounded-3xl border border-white/10 p-8 shadow-2xl space-y-4">
