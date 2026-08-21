@@ -26,7 +26,8 @@ import {
   Wand2,
   FileCode,
   FileImage,
-  Globe
+  Globe,
+  Palette
 } from 'lucide-react';
 
 // Dynamic import for Excalidraw with SSR disabled
@@ -60,6 +61,16 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
   // Modals
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [isGDriveModalOpen, setIsGDriveModalOpen] = useState(false);
+  const [canvasBg, setCanvasBg] = useState<string>(board.data?.appState?.viewBackgroundColor || '#090d16');
+
+  const handleCanvasBgChange = (color: string) => {
+    setCanvasBg(color);
+    if (excalidrawAPI) {
+      excalidrawAPI.updateScene({
+        appState: { viewBackgroundColor: color },
+      });
+    }
+  };
 
   // Memoized safe elements and appState for Excalidraw initialization
   const safeElements = React.useMemo(() => {
@@ -565,6 +576,43 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
 
         {/* Right Section: Language, AI, Drive, Export, Import */}
         <div className="flex items-center gap-2">
+          {/* Canvas Background Color Picker (Presets: Dark, White + Custom Picker) */}
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-white/5 border border-white/10 text-xs" title="Cambiar color de fondo del lienzo">
+            <Palette className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="hidden xl:inline text-[11px] text-slate-400 font-medium">Fondo:</span>
+            
+            {/* Dark Preset */}
+            <button
+              type="button"
+              onClick={() => handleCanvasBgChange('#090d16')}
+              className={`w-4 h-4 rounded-full bg-[#090d16] border transition-transform hover:scale-110 ${
+                canvasBg === '#090d16' ? 'ring-2 ring-indigo-500 border-white' : 'border-white/30'
+              }`}
+              title="Fondo Oscuro Base (#090d16)"
+            />
+
+            {/* White Preset */}
+            <button
+              type="button"
+              onClick={() => handleCanvasBgChange('#ffffff')}
+              className={`w-4 h-4 rounded-full bg-white border transition-transform hover:scale-110 ${
+                canvasBg === '#ffffff' ? 'ring-2 ring-indigo-500 border-slate-400' : 'border-slate-300'
+              }`}
+              title="Fondo Blanco Base (#ffffff)"
+            />
+
+            {/* Custom Color Picker */}
+            <label className="relative flex items-center justify-center w-4 h-4 rounded-full overflow-hidden border border-white/40 cursor-pointer hover:scale-110 transition-transform" title="Seleccionar cualquier color personalizado">
+              <input
+                type="color"
+                value={canvasBg}
+                onChange={(e) => handleCanvasBgChange(e.target.value)}
+                className="absolute -top-2 -left-2 w-8 h-8 cursor-pointer opacity-0"
+              />
+              <div className="w-full h-full rounded-full" style={{ backgroundColor: canvasBg }} />
+            </label>
+          </div>
+
           {/* Language Switcher */}
           <button
             onClick={() => setLanguage(language === 'en' ? 'es' : 'en')}
