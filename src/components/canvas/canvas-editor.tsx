@@ -61,6 +61,56 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [isGDriveModalOpen, setIsGDriveModalOpen] = useState(false);
 
+  // Memoized safe elements and appState for Excalidraw initialization
+  const safeElements = React.useMemo(() => {
+    const rawElements = board?.data?.elements;
+    if (!Array.isArray(rawElements)) return [];
+    
+    return rawElements
+      .filter((el: any) => el && typeof el === 'object' && typeof el.type === 'string')
+      .map((el: any) => ({
+        id: el.id || `el_${Math.random().toString(36).substring(2, 9)}`,
+        type: el.type,
+        x: typeof el.x === 'number' ? el.x : 0,
+        y: typeof el.y === 'number' ? el.y : 0,
+        width: typeof el.width === 'number' ? el.width : 100,
+        height: typeof el.height === 'number' ? el.height : 100,
+        angle: typeof el.angle === 'number' ? el.angle : 0,
+        strokeColor: el.strokeColor || '#ffffff',
+        backgroundColor: el.backgroundColor || 'transparent',
+        fillStyle: el.fillStyle || 'solid',
+        strokeWidth: typeof el.strokeWidth === 'number' ? el.strokeWidth : 1,
+        strokeStyle: el.strokeStyle || 'solid',
+        roughness: typeof el.roughness === 'number' ? el.roughness : 1,
+        opacity: typeof el.opacity === 'number' ? el.opacity : 100,
+        groupIds: Array.isArray(el.groupIds) ? el.groupIds : [],
+        frameId: el.frameId || null,
+        roundness: el.roundness || null,
+        seed: el.seed || Math.floor(Math.random() * 100000),
+        version: el.version || 1,
+        versionNonce: el.versionNonce || Math.floor(Math.random() * 100000),
+        isDeleted: Boolean(el.isDeleted),
+        boundElements: el.boundElements || null,
+        updated: el.updated || Date.now(),
+        link: el.link || null,
+        locked: Boolean(el.locked),
+        ...el,
+      }));
+  }, [board?.data?.elements]);
+
+  const safeAppState = React.useMemo(() => {
+    return {
+      viewBackgroundColor: board?.data?.appState?.viewBackgroundColor || '#090d16',
+      gridSize: board?.data?.appState?.gridSize || 20,
+      currentItemStrokeColor: '#ffffff',
+      currentItemBackgroundColor: 'transparent',
+      currentItemFillStyle: 'solid',
+      currentItemFontFamily: 1,
+      currentItemRoughness: 1,
+      ...(board?.data?.appState || {}),
+    };
+  }, [board?.data?.appState]);
+
   // Auto-fit content when API is ready
   useEffect(() => {
     if (excalidrawAPI && board.data.elements && board.data.elements.length > 0) {
@@ -640,17 +690,9 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
           <Excalidraw
             excalidrawAPI={(api: any) => setExcalidrawAPI(api)}
             initialData={{
-              elements: board.data.elements || [],
-              appState: {
-                viewBackgroundColor: board.data.appState?.viewBackgroundColor || '#090d16',
-                gridSize: board.data.appState?.gridSize || 20,
-                currentItemStrokeColor: '#ffffff',
-                currentItemBackgroundColor: 'transparent',
-                currentItemFillStyle: 'solid',
-                currentItemFontFamily: 1,
-                currentItemRoughness: 1,
-              },
-              files: board.data.files || {},
+              elements: safeElements,
+              appState: safeAppState,
+              files: board?.data?.files || {},
             }}
             onChange={handleChange}
             theme="dark"
