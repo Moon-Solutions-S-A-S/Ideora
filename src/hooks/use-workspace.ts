@@ -12,13 +12,6 @@ export function useWorkspace() {
     setLoading(true);
     try {
       let data = await IdeoraStore.getWorkspaces();
-      if (data.length === 0) {
-        const user = IdeoraStore.getUser();
-        if (user && user.id) {
-          const defaultWs = await IdeoraStore.createWorkspace("My Workspace", "Default workspace for my diagrams", "#6366f1");
-          data = [defaultWs];
-        }
-      }
       setWorkspaces(data);
     } catch (e) {
       console.error('Failed to load workspaces:', e);

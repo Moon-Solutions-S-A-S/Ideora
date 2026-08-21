@@ -8,6 +8,7 @@ interface NewBoardModalProps {
   isOpen: boolean;
   onClose: () => void;
   workspaces: Workspace[];
+  defaultWorkspaceId?: string;
   onCreateBoard: (name: string, workspaceId: string, templateType?: string) => void;
 }
 
@@ -15,6 +16,7 @@ export function NewBoardModal({
   isOpen,
   onClose,
   workspaces,
+  defaultWorkspaceId,
   onCreateBoard,
 }: NewBoardModalProps) {
   const [name, setName] = useState('');
@@ -22,10 +24,14 @@ export function NewBoardModal({
   const [selectedTemplate, setSelectedTemplate] = useState('blank');
 
   useEffect(() => {
-    if (workspaces.length > 0 && !selectedWsId) {
-      setSelectedWsId(workspaces[0].id);
+    if (isOpen) {
+      if (defaultWorkspaceId && workspaces.some((w) => w.id === defaultWorkspaceId)) {
+        setSelectedWsId(defaultWorkspaceId);
+      } else if (workspaces.length > 0) {
+        setSelectedWsId(workspaces[0].id);
+      }
     }
-  }, [workspaces, selectedWsId]);
+  }, [isOpen, defaultWorkspaceId, workspaces]);
 
   if (!isOpen) return null;
 

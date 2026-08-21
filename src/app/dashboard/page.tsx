@@ -216,16 +216,14 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={ws.id}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 border ${
+                    onClick={() => setActiveFilter(ws.id)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 border cursor-pointer ${
                       isSelected
                         ? 'bg-violet-600/20 text-violet-300 border-violet-500/50 shadow-sm'
                         : 'bg-slate-900/60 text-slate-400 hover:text-white border-white/5'
                     }`}
                   >
-                    <button
-                      onClick={() => setActiveFilter(ws.id)}
-                      className="flex items-center gap-2"
-                    >
+                    <div className="flex items-center gap-2">
                       <span
                         className="w-2.5 h-2.5 rounded-full"
                         style={{ backgroundColor: ws.color || '#6366f1' }}
@@ -234,10 +232,14 @@ export default function DashboardPage() {
                       <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-white/10 text-slate-300">
                         {count}
                       </span>
-                    </button>
+                    </div>
 
                     {/* Color picker wheel button */}
-                    <label title="Cambiar color" className="p-1 text-slate-400 hover:text-white cursor-pointer relative">
+                    <label 
+                      title="Cambiar color" 
+                      onClick={(e) => e.stopPropagation()}
+                      className="p-1 text-slate-400 hover:text-white cursor-pointer relative"
+                    >
                       <Palette className="w-3 h-3" />
                       <input
                         type="color"
@@ -248,7 +250,8 @@ export default function DashboardPage() {
                     </label>
 
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         deleteWorkspace(ws.id);
                         if (activeFilter === ws.id) setActiveFilter('all');
                       }}
@@ -358,6 +361,7 @@ export default function DashboardPage() {
         isOpen={isNewBoardOpen}
         onClose={() => setIsNewBoardOpen(false)}
         workspaces={workspaces}
+        defaultWorkspaceId={activeFilter !== 'all' && activeFilter !== 'favorites' && activeFilter !== 'trash' ? activeFilter : undefined}
         onCreateBoard={async (name, wsId, template) => {
           let initData = undefined;
           if (template === 'mindmap') {
@@ -378,6 +382,9 @@ export default function DashboardPage() {
             };
           }
           await createBoard(name, wsId, initData);
+          if (wsId) {
+            setActiveFilter(wsId);
+          }
         }}
       />
 
@@ -385,8 +392,11 @@ export default function DashboardPage() {
       <NewWorkspaceModal
         isOpen={isNewWorkspaceOpen}
         onClose={() => setIsNewWorkspaceOpen(false)}
-        onCreateWorkspace={(name, desc, color) => {
-          createWorkspace(name, desc, color);
+        onCreateWorkspace={async (name, desc, color) => {
+          const created = await createWorkspace(name, desc, color);
+          if (created?.id) {
+            setActiveFilter(created.id);
+          }
         }}
       />
     </div>

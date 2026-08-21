@@ -60,6 +60,7 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
 
   // Modals
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+  const [isGDriveModalOpen, setIsGDriveModalOpen] = useState(false);
   const [canvasBg, setCanvasBg] = useState<string>(board.data?.appState?.viewBackgroundColor || '#090d16');
 
   const handleCanvasBgChange = (color: string) => {
