@@ -100,48 +100,72 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
     
     return rawElements
       .filter((el: any) => el && typeof el === 'object' && typeof el.type === 'string')
-      .map((el: any) => ({
-        id: el.id || `el_${Math.random().toString(36).substring(2, 9)}`,
-        type: el.type,
-        x: typeof el.x === 'number' ? el.x : 0,
-        y: typeof el.y === 'number' ? el.y : 0,
-        width: typeof el.width === 'number' ? el.width : 100,
-        height: typeof el.height === 'number' ? el.height : 100,
-        angle: typeof el.angle === 'number' ? el.angle : 0,
-        strokeColor: el.strokeColor || '#ffffff',
-        backgroundColor: el.backgroundColor || 'transparent',
-        fillStyle: el.fillStyle || 'solid',
-        strokeWidth: typeof el.strokeWidth === 'number' ? el.strokeWidth : 1,
-        strokeStyle: el.strokeStyle || 'solid',
-        roughness: typeof el.roughness === 'number' ? el.roughness : 1,
-        opacity: typeof el.opacity === 'number' ? el.opacity : 100,
-        groupIds: Array.isArray(el.groupIds) ? el.groupIds : [],
-        frameId: el.frameId || null,
-        roundness: el.roundness || null,
-        seed: el.seed || Math.floor(Math.random() * 100000),
-        version: el.version || 1,
-        versionNonce: el.versionNonce || Math.floor(Math.random() * 100000),
-        isDeleted: Boolean(el.isDeleted),
-        boundElements: el.boundElements || null,
-        updated: el.updated || Date.now(),
-        link: el.link || null,
-        locked: Boolean(el.locked),
-        ...el,
-      }));
+      .map((el: any) => {
+        const cleaned: any = {
+          id: el.id || `el_${Math.random().toString(36).substring(2, 9)}`,
+          type: el.type,
+          x: typeof el.x === 'number' ? el.x : 0,
+          y: typeof el.y === 'number' ? el.y : 0,
+          width: typeof el.width === 'number' ? el.width : 100,
+          height: typeof el.height === 'number' ? el.height : 100,
+          angle: typeof el.angle === 'number' ? el.angle : 0,
+          strokeColor: el.strokeColor || '#ffffff',
+          backgroundColor: el.backgroundColor || 'transparent',
+          fillStyle: el.fillStyle || 'solid',
+          strokeWidth: typeof el.strokeWidth === 'number' ? el.strokeWidth : 1,
+          strokeStyle: el.strokeStyle || 'solid',
+          roughness: typeof el.roughness === 'number' ? el.roughness : 1,
+          opacity: typeof el.opacity === 'number' ? el.opacity : 100,
+          groupIds: Array.isArray(el.groupIds) ? el.groupIds : [],
+          frameId: el.frameId || null,
+          roundness: el.roundness || null,
+          seed: el.seed || Math.floor(Math.random() * 100000),
+          version: el.version || 1,
+          versionNonce: el.versionNonce || Math.floor(Math.random() * 100000),
+          isDeleted: Boolean(el.isDeleted),
+          boundElements: Array.isArray(el.boundElements) ? el.boundElements : null,
+          updated: el.updated || Date.now(),
+          link: el.link || null,
+          locked: Boolean(el.locked),
+          ...el,
+        };
+
+        // CRITICAL FIX: Linear elements (arrow, line, freedraw) MUST have a valid non-empty points array
+        if (['arrow', 'line', 'freedraw'].includes(cleaned.type)) {
+          if (!Array.isArray(cleaned.points) || cleaned.points.length === 0) {
+            cleaned.points = [[0, 0], [cleaned.width || 100, cleaned.height || 0]];
+          }
+        }
+
+        // Ensure groupIds is always an array
+        if (!Array.isArray(cleaned.groupIds)) {
+          cleaned.groupIds = [];
+        }
+
+        // Ensure boundElements is array or null
+        if (!Array.isArray(cleaned.boundElements) && cleaned.boundElements !== null) {
+          cleaned.boundElements = null;
+        }
+
+        return cleaned;
+      });
   }, [board?.data?.elements]);
 
   const safeAppState = React.useMemo(() => {
+    const rawAppState = board?.data?.appState || {};
+    // Exclude collaborators if present as a plain object because Excalidraw expects a Map or undefined
+    const { collaborators, ...restAppState } = rawAppState;
     return {
-      viewBackgroundColor: board?.data?.appState?.viewBackgroundColor || '#090d16',
-      gridSize: board?.data?.appState?.gridSize || 20,
+      viewBackgroundColor: canvasBg || rawAppState.viewBackgroundColor || '#090d16',
+      gridSize: rawAppState.gridSize || 20,
       currentItemStrokeColor: '#ffffff',
       currentItemBackgroundColor: 'transparent',
       currentItemFillStyle: 'solid' as const,
       currentItemFontFamily: 1,
       currentItemRoughness: 1,
-      ...(board?.data?.appState || {}),
+      ...restAppState,
     };
-  }, [board?.data?.appState]);
+  }, [board?.data?.appState, canvasBg]);
 
   // Auto-fit content when API is ready
   useEffect(() => {
