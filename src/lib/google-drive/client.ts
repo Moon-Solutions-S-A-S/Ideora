@@ -31,6 +31,11 @@ export class GoogleDriveService {
     }
   }
 
+  // Check if connected
+  static isConnected(): boolean {
+    return this.getSession().connected;
+  }
+
   // Save session
   static setSession(session: GoogleDriveAccount): void {
     if (typeof window === 'undefined') return;

@@ -28,14 +28,14 @@ export function useAuth() {
           setLoading(false);
           return;
         } else {
-          // If Supabase is active but no session, set user to null (guest)
+          // Explicitly set null when no session is active in Supabase
           setUser(null);
           setLoading(false);
           return;
         }
       }
 
-      // Fallback local user ONLY if Supabase is not configured (offline / mock mode)
+      // Local storage fallback ONLY if client is completely null
       const localUser = IdeoraStore.getUser();
       setUser(localUser);
       setLoading(false);
@@ -77,13 +77,32 @@ export function useAuth() {
     setUser(demo);
   };
 
+  const updateProfile = (displayName: string, avatarUrl: string) => {
+    if (!user) return;
+    const updated: UserProfile = {
+      ...user,
+      displayName,
+      avatarUrl,
+    };
+    setUser(updated);
+    IdeoraStore.setUser(updated);
+  };
+
   const logout = async () => {
     const client = createClient();
     if (client) {
-      await client.auth.signOut();
+      try {
+        await client.auth.signOut();
+      } catch (e) {
+        console.error('Sign out error:', e);
+      }
     }
     GoogleDriveService.disconnect();
     setUser(null);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('ideora_user_profile');
+      window.location.href = '/';
+    }
   };
 
   return {
@@ -92,6 +111,7 @@ export function useAuth() {
     isAuthenticated: !!user,
     loginWithGoogle,
     loginWithDemo,
+    updateProfile,
     logout,
   };
 }

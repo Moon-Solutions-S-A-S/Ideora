@@ -9,7 +9,9 @@ import {
   Trash2, 
   FolderPlus, 
   Plus, 
-  Layers
+  Layers,
+  Palette,
+  X
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -18,6 +20,8 @@ interface SidebarProps {
   onSelectFilter: (filter: string) => void;
   onOpenNewWorkspace: () => void;
   onOpenNewBoard: () => void;
+  onDeleteWorkspace?: (id: string) => void;
+  onUpdateWorkspaceColor?: (id: string, color: string) => void;
   deletedCount: number;
 }
 
@@ -27,6 +31,8 @@ export function Sidebar({
   onSelectFilter,
   onOpenNewWorkspace,
   onOpenNewBoard,
+  onDeleteWorkspace,
+  onUpdateWorkspaceColor,
   deletedCount,
 }: SidebarProps) {
   const { t } = useTranslation();
@@ -46,7 +52,7 @@ export function Sidebar({
         {/* Navigation Section */}
         <div className="space-y-1">
           <div className="px-3 py-1 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-            Navigation
+            Navegación
           </div>
 
           <button
@@ -105,7 +111,7 @@ export function Sidebar({
             </span>
             <button
               onClick={onOpenNewWorkspace}
-              title="Create new workspace"
+              title="Crear nuevo espacio"
               className="p-1 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
               <FolderPlus className="w-4 h-4 text-violet-400" />
@@ -116,21 +122,55 @@ export function Sidebar({
             {workspaces.map((ws) => {
               const isSelected = activeFilter === ws.id;
               return (
-                <button
+                <div
                   key={ws.id}
-                  onClick={() => onSelectFilter(ws.id)}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors text-left ${
+                  className={`group relative w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                     isSelected
                       ? 'bg-violet-600/20 text-violet-300 border border-violet-500/30'
                       : 'text-slate-300 hover:bg-white/5 hover:text-white'
                   }`}
                 >
-                  <span
-                    className="w-2.5 h-2.5 rounded-full shrink-0"
-                    style={{ backgroundColor: ws.color || '#6366f1' }}
-                  />
-                  <span className="truncate">{ws.name}</span>
-                </button>
+                  <button
+                    onClick={() => onSelectFilter(ws.id)}
+                    className="flex items-center gap-2.5 flex-1 min-w-0 text-left"
+                  >
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: ws.color || '#6366f1' }}
+                    />
+                    <span className="truncate">{ws.name}</span>
+                  </button>
+
+                  {/* Actions (Custom Color Picker & Delete) */}
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {onUpdateWorkspaceColor && (
+                      <label title="Cambiar color" className="p-1 text-slate-400 hover:text-white cursor-pointer relative">
+                        <Palette className="w-3.5 h-3.5" />
+                        <input
+                          type="color"
+                          value={ws.color || '#6366f1'}
+                          onChange={(e) => onUpdateWorkspaceColor(ws.id, e.target.value)}
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                        />
+                      </label>
+                    )}
+
+                    {onDeleteWorkspace && workspaces.length > 1 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(`¿Eliminar el espacio "${ws.name}"?`)) {
+                            onDeleteWorkspace(ws.id);
+                          }
+                        }}
+                        title="Eliminar espacio"
+                        className="p-1 text-slate-400 hover:text-rose-400 rounded transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
               );
             })}
           </div>

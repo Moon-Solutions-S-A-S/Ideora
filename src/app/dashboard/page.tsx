@@ -21,14 +21,16 @@ import {
   Sparkles, 
   Layers, 
   Folder,
-  Loader2
+  Loader2,
+  Trash2,
+  Palette
 } from 'lucide-react';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { t } = useTranslation();
-  const { workspaces, createWorkspace } = useWorkspace();
+  const { workspaces, createWorkspace, updateWorkspace, deleteWorkspace } = useWorkspace();
   const {
     boards,
     loading,
@@ -105,7 +107,11 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-indigo-500 selection:text-white">
-      <Header onNewBoard={() => setIsNewBoardOpen(true)} />
+      <Header 
+        onNewBoard={() => setIsNewBoardOpen(true)} 
+        totalBoards={activeBoards.length}
+        totalWorkspaces={workspaces.length}
+      />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 flex gap-8">
         {/* Sidebar */}
@@ -115,6 +121,11 @@ export default function DashboardPage() {
           onSelectFilter={setActiveFilter}
           onOpenNewWorkspace={() => setIsNewWorkspaceOpen(true)}
           onOpenNewBoard={() => setIsNewBoardOpen(true)}
+          onDeleteWorkspace={(id) => {
+            deleteWorkspace(id);
+            if (activeFilter === id) setActiveFilter('all');
+          }}
+          onUpdateWorkspaceColor={(id, color) => updateWorkspace(id, { color })}
           deletedCount={softDeletedBoards.length}
         />
 
@@ -203,24 +214,54 @@ export default function DashboardPage() {
                 const count = activeBoards.filter((b) => b.workspaceId === ws.id).length;
                 const isSelected = activeFilter === ws.id;
                 return (
-                  <button
+                  <div
                     key={ws.id}
-                    onClick={() => setActiveFilter(ws.id)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 border ${
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 border ${
                       isSelected
                         ? 'bg-violet-600/20 text-violet-300 border-violet-500/50 shadow-sm'
                         : 'bg-slate-900/60 text-slate-400 hover:text-white border-white/5'
                     }`}
                   >
-                    <span
-                      className="w-2.5 h-2.5 rounded-full"
-                      style={{ backgroundColor: ws.color || '#6366f1' }}
-                    />
-                    <span>{ws.name}</span>
-                    <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-white/10 text-slate-300">
-                      {count}
-                    </span>
-                  </button>
+                    <button
+                      onClick={() => setActiveFilter(ws.id)}
+                      className="flex items-center gap-2"
+                    >
+                      <span
+                        className="w-2.5 h-2.5 rounded-full"
+                        style={{ backgroundColor: ws.color || '#6366f1' }}
+                      />
+                      <span>{ws.name}</span>
+                      <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-white/10 text-slate-300">
+                        {count}
+                      </span>
+                    </button>
+
+                    {/* Color picker wheel button */}
+                    <label title="Cambiar color" className="p-1 text-slate-400 hover:text-white cursor-pointer relative">
+                      <Palette className="w-3 h-3" />
+                      <input
+                        type="color"
+                        value={ws.color || '#6366f1'}
+                        onChange={(e) => updateWorkspace(ws.id, { color: e.target.value })}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      />
+                    </label>
+
+                    {workspaces.length > 1 && (
+                      <button
+                        onClick={() => {
+                          if (confirm(`¿Eliminar espacio de trabajo "${ws.name}"?`)) {
+                            deleteWorkspace(ws.id);
+                            if (activeFilter === ws.id) setActiveFilter('all');
+                          }
+                        }}
+                        title="Eliminar espacio"
+                        className="p-1 text-slate-500 hover:text-rose-400 transition-colors"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -233,11 +274,11 @@ export default function DashboardPage() {
                 {activeFilter === 'all' && t('dash_recent_boards')}
                 {activeFilter === 'favorites' && t('dash_favorites')}
                 {activeFilter === 'trash' && t('dash_trash')}
-                {activeWorkspace && `Workspace: ${activeWorkspace.name}`}
+                {activeWorkspace && `Espacio: ${activeWorkspace.name}`}
               </h2>
               <p className="text-xs text-slate-400">
                 {activeFilter === 'trash'
-                  ? 'Boards here can be restored or permanently deleted'
+                  ? 'Los tableros aquí pueden ser restaurados o eliminados permanentemente'
                   : t('dash_sorted_by')}
               </p>
             </div>
@@ -294,13 +335,13 @@ export default function DashboardPage() {
                 <Sparkles className="w-7 h-7" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-lg font-bold text-white">No boards found</h3>
+                <h3 className="text-lg font-bold text-white">No se encontraron tableros</h3>
                 <p className="text-xs text-slate-400 max-w-sm mx-auto">
                   {searchQuery
-                    ? `No results matching "${searchQuery}"`
+                    ? `Sin resultados para "${searchQuery}"`
                     : activeFilter === 'trash'
-                    ? 'Trash is empty'
-                    : 'No boards in this category yet. Create your first board now!'}
+                    ? 'La papelera está vacía'
+                    : 'No hay tableros en este espacio aún. ¡Crea tu primer tablero ahora!'}
                 </p>
               </div>
               {activeFilter !== 'trash' && (
@@ -327,7 +368,7 @@ export default function DashboardPage() {
             initData = {
               elements: [
                 { id: 'm1', type: 'ellipse', x: 400, y: 250, width: 180, height: 100, strokeColor: '#6366f1', backgroundColor: '#312e81', fillStyle: 'solid', roughness: 1 },
-                { id: 'mt1', type: 'text', x: 425, y: 285, width: 130, height: 30, text: 'Central Idea', strokeColor: '#ffffff', fontSize: 20 },
+                { id: 'mt1', type: 'text', x: 425, y: 285, width: 130, height: 30, text: 'Idea Central', strokeColor: '#ffffff', fontSize: 20 },
               ],
               appState: { viewBackgroundColor: '#090d16' },
             };
@@ -335,7 +376,7 @@ export default function DashboardPage() {
             initData = {
               elements: [
                 { id: 'f1', type: 'rectangle', x: 350, y: 150, width: 160, height: 70, strokeColor: '#10b981', backgroundColor: '#064e3b', fillStyle: 'solid', roundness: { type: 3 } },
-                { id: 'ft1', type: 'text', x: 380, y: 172, width: 100, height: 25, text: 'Start', strokeColor: '#ffffff', fontSize: 18 },
+                { id: 'ft1', type: 'text', x: 380, y: 172, width: 100, height: 25, text: 'Inicio', strokeColor: '#ffffff', fontSize: 18 },
               ],
               appState: { viewBackgroundColor: '#090d16' },
             };

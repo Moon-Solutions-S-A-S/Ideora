@@ -296,6 +296,41 @@ export class IdeoraStore {
     return newWs;
   }
 
+  static async updateWorkspace(id: string, updates: { name?: string; description?: string; color?: string }): Promise<Workspace | null> {
+    const client = createClient();
+    if (client) {
+      const { data, error } = await client
+        .from('workspaces')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      if (!error && data) {
+        return {
+          id: data.id,
+          ownerId: data.owner_id,
+          name: data.name,
+          description: data.description,
+          color: data.color,
+          createdAt: data.created_at,
+          updatedAt: data.updated_at,
+        };
+      }
+    }
+
+    const workspaces = await this.getWorkspaces();
+    const index = workspaces.findIndex((w) => w.id === id);
+    if (index === -1) return null;
+
+    workspaces[index] = {
+      ...workspaces[index],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+    setItem(STORAGE_KEYS.WORKSPACES, workspaces);
+    return workspaces[index];
+  }
+
   static async deleteWorkspace(id: string): Promise<void> {
     const client = createClient();
     if (client) {

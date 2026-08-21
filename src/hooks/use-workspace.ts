@@ -37,6 +37,14 @@ export function useWorkspace() {
     return created;
   };
 
+  const updateWorkspace = async (id: string, updates: { name?: string; description?: string; color?: string }) => {
+    const updated = await IdeoraStore.updateWorkspace(id, updates);
+    if (updated) {
+      setWorkspaces((prev) => prev.map((w) => (w.id === id ? updated : w)));
+    }
+    return updated;
+  };
+
   const deleteWorkspace = async (id: string) => {
     await IdeoraStore.deleteWorkspace(id);
     setWorkspaces((prev) => prev.filter((w) => w.id !== id));
@@ -47,6 +55,7 @@ export function useWorkspace() {
     loading,
     refreshWorkspaces: fetchWorkspaces,
     createWorkspace,
+    updateWorkspace,
     deleteWorkspace,
   };
 }

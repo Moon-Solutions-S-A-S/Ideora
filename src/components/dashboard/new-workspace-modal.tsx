@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, FolderPlus } from 'lucide-react';
+import { X, FolderPlus, Palette } from 'lucide-react';
 
 interface NewWorkspaceModalProps {
   isOpen: boolean;
@@ -20,7 +20,7 @@ export function NewWorkspaceModal({
 
   if (!isOpen) return null;
 
-  const colorOptions = ['#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'];
+  const colorOptions = ['#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#f43f5e'];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,10 +81,11 @@ export function NewWorkspaceModal({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-              Color Distintivo
+            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2 flex items-center justify-between">
+              <span>Color Distintivo</span>
+              <span className="text-[10px] text-indigo-300 font-normal uppercase">{color}</span>
             </label>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5 flex-wrap">
               {colorOptions.map((c) => (
                 <button
                   key={c}
@@ -96,6 +97,17 @@ export function NewWorkspaceModal({
                   style={{ backgroundColor: c }}
                 />
               ))}
+
+              {/* Custom Color Wheel Picker */}
+              <div className="relative flex items-center justify-center w-7 h-7 rounded-full border border-white/20 overflow-hidden cursor-pointer hover:scale-110 transition-transform bg-gradient-to-tr from-rose-500 via-emerald-500 to-indigo-500" title="Seleccionar color personalizado">
+                <Palette className="w-3.5 h-3.5 text-white drop-shadow" />
+                <input
+                  type="color"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                />
+              </div>
             </div>
           </div>
 
