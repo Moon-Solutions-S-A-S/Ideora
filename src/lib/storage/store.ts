@@ -498,15 +498,31 @@ export class IdeoraStore {
 
     // Local Storage fallback
     const boards = await this.getBoards(true);
-    const index = boards.findIndex((b) => b.id === id);
-    if (index === -1) return null;
+    let index = boards.findIndex((b) => b.id === id);
 
-    boards[index] = {
-      ...boards[index],
-      data,
-      name: name || boards[index].name,
-      updatedAt: now,
-    };
+    if (index === -1) {
+      const user = this.getUser();
+      const newBoard: Board = {
+        id,
+        workspaceId: 'ws_projects',
+        ownerId: user.id,
+        name: name || 'Tablero',
+        data,
+        isFavorite: false,
+        createdAt: now,
+        updatedAt: now,
+        deletedAt: null,
+      };
+      boards.unshift(newBoard);
+      index = 0;
+    } else {
+      boards[index] = {
+        ...boards[index],
+        data,
+        name: name || boards[index].name,
+        updatedAt: now,
+      };
+    }
 
     setItem(STORAGE_KEYS.BOARDS, boards);
     return boards[index];
