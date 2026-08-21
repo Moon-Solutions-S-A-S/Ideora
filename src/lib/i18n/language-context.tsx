@@ -112,6 +112,16 @@ export const translations = {
     gdrive_modal_connect_btn: "Connect with Google Drive",
     gdrive_modal_sync_now: "Save in Drive",
     gdrive_modal_close: "Close",
+
+    // Footer
+    footer_project_by: "A project by",
+    footer_privacy: "Privacy Policy",
+    footer_terms: "Terms of Service",
+    footer_dev_with: "Developed with",
+    footer_from: "from",
+    footer_by: "by",
+    footer_rights: "All rights reserved.",
+    footer_view_github: "View on GitHub",
   },
   es: {
     // Header
@@ -220,6 +230,16 @@ export const translations = {
     gdrive_modal_connect_btn: "Conectar con Google Drive",
     gdrive_modal_sync_now: "Guardar en Drive",
     gdrive_modal_close: "Cerrar",
+
+    // Footer
+    footer_project_by: "Un proyecto de",
+    footer_privacy: "Política de Privacidad",
+    footer_terms: "Términos del Servicio",
+    footer_dev_with: "Desarrollado con",
+    footer_from: "desde",
+    footer_by: "por",
+    footer_rights: "Todos los derechos reservados.",
+    footer_view_github: "Ver en GitHub",
   }
 };
 

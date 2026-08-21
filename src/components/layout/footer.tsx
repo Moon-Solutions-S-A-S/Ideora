@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Sparkles, Heart } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n/language-context';
 
 function GithubIcon({ className = "w-4 h-4" }: { className?: string }) {
   return (
@@ -22,6 +23,8 @@ function GithubIcon({ className = "w-4 h-4" }: { className?: string }) {
 }
 
 export function Footer() {
+  const { t } = useTranslation();
+
   return (
     <footer className="glass-panel border-t border-white/10 py-10 px-6 bg-slate-950/80 text-slate-400 text-xs relative z-10">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
@@ -41,15 +44,15 @@ export function Footer() {
           </div>
           <span className="hidden sm:inline text-slate-700">|</span>
           <div className="flex items-center gap-2 text-slate-300">
-            <span>Un proyecto de</span>
+            <span>{t('footer_project_by')}</span>
             <a 
               href="https://github.com/Moon-Solutions-S-A-S" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="inline-flex items-center gap-1 text-indigo-300 font-semibold hover:text-white transition-colors"
+              className="inline-flex items-center gap-1.5 text-indigo-300 font-semibold hover:text-white transition-colors"
             >
               <GithubIcon className="w-3.5 h-3.5" />
-              <span>Moon Technologies</span>
+              <span>Moon Technologies 🇨🇴</span>
             </a>
           </div>
         </div>
@@ -57,32 +60,32 @@ export function Footer() {
         {/* Center: Legal Links */}
         <div className="flex items-center gap-4 text-slate-400 font-medium">
           <Link href="/privacy" className="hover:text-indigo-400 transition-colors">
-            Política de Privacidad
+            {t('footer_privacy')}
           </Link>
           <span className="text-slate-700">•</span>
           <Link href="/terms" className="hover:text-indigo-400 transition-colors">
-            Términos del Servicio
+            {t('footer_terms')}
           </Link>
         </div>
 
         {/* Right Side: Creator, Location & Copyright */}
         <div className="flex flex-col items-center md:items-end gap-1.5 text-center md:text-right">
-          <div className="flex flex-wrap items-center justify-center md:justify-end gap-1.5 text-slate-300">
-            <span>Desarrollado con</span>
-            <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500 inline animate-pulse" />
-            <span>desde <strong className="text-slate-200 font-semibold">Aguachica, Cesar</strong> 🇨🇴 por</span>
+          <div className="flex flex-wrap items-center justify-center md:justify-end gap-1 text-slate-300">
+            <span>{t('footer_dev_with')}</span>
+            <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500 inline animate-pulse mx-0.5" />
+            <span>{t('footer_from')} <strong className="text-slate-200 font-semibold">Aguachica, Cesar</strong> {t('footer_by')}</span>
             <a 
               href="https://github.com/josedavd-07" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="inline-flex items-center gap-1 text-white font-medium hover:text-indigo-300 transition-colors"
+              className="inline-flex items-center gap-1 text-white font-medium hover:text-indigo-300 transition-colors ml-1"
             >
               <GithubIcon className="w-3.5 h-3.5 text-indigo-400" />
               <span>Jose David Carranza Angarita</span>
             </a>
           </div>
           <div className="flex items-center gap-3 text-[11px] text-slate-500">
-            <span>© 2026 Moon Technologies 🇨🇴</span>
+            <span>© 2026 Moon Technologies. {t('footer_rights')}</span>
             <span>•</span>
             <a 
               href="https://github.com/josedavd-07/Ideora" 
@@ -91,7 +94,7 @@ export function Footer() {
               className="hover:text-slate-300 transition-colors inline-flex items-center gap-1"
             >
               <GithubIcon className="w-3 h-3" />
-              <span>Ver en GitHub</span>
+              <span>{t('footer_view_github')}</span>
             </a>
           </div>
         </div>
