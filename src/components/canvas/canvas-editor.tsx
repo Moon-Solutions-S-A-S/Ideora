@@ -63,29 +63,12 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
   const [isGDriveModalOpen, setIsGDriveModalOpen] = useState(false);
   const [canvasBg, setCanvasBg] = useState<string>(board.data?.appState?.viewBackgroundColor || '#090d16');
 
-  const isLightBg = React.useMemo(() => {
-    if (!canvasBg) return false;
-    const hex = canvasBg.toLowerCase().trim();
-    if (hex === '#ffffff' || hex === '#fff') return true;
-    if (hex.startsWith('#') && hex.length === 7) {
-      const r = parseInt(hex.substring(1, 3), 16);
-      const g = parseInt(hex.substring(3, 5), 16);
-      const b = parseInt(hex.substring(5, 7), 16);
-      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-      return brightness > 160;
-    }
-    return false;
-  }, [canvasBg]);
-
   const handleCanvasBgChange = (color: string) => {
     setCanvasBg(color);
     if (excalidrawAPI) {
-      const hex = color.toLowerCase().trim();
-      const isLight = hex === '#ffffff' || hex === '#fff';
       excalidrawAPI.updateScene({
         appState: { 
           viewBackgroundColor: color,
-          theme: isLight ? 'light' : 'dark'
         },
       });
     }
@@ -787,7 +770,7 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
               files: board?.data?.files || {},
             }}
             onChange={handleChange}
-            theme={isLightBg ? 'light' : 'dark'}
+            theme="dark"
             UIOptions={{
               canvasActions: {
                 changeViewBackgroundColor: false,
