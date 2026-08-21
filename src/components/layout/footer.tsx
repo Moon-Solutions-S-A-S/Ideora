@@ -65,12 +65,12 @@ export function Footer() {
           </Link>
         </div>
 
-        {/* Right Side: Creator & Copyright */}
+        {/* Right Side: Creator, Location & Copyright */}
         <div className="flex flex-col items-center md:items-end gap-1.5 text-center md:text-right">
-          <div className="flex items-center gap-1.5 text-slate-300">
+          <div className="flex flex-wrap items-center justify-center md:justify-end gap-1.5 text-slate-300">
             <span>Desarrollado con</span>
             <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500 inline animate-pulse" />
-            <span>por</span>
+            <span>desde <strong className="text-slate-200 font-semibold">Aguachica, Cesar</strong> 🇨🇴 por</span>
             <a 
               href="https://github.com/josedavd-07" 
               target="_blank" 
@@ -82,7 +82,7 @@ export function Footer() {
             </a>
           </div>
           <div className="flex items-center gap-3 text-[11px] text-slate-500">
-            <span>© 2026 Moon Technologies (Colombia)</span>
+            <span>© 2026 Moon Technologies 🇨🇴</span>
             <span>•</span>
             <a 
               href="https://github.com/josedavd-07/Ideora" 
