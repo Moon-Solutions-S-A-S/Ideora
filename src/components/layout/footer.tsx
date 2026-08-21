@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Sparkles, Heart } from 'lucide-react';
+import { Sparkles, Heart, Github } from 'lucide-react';
 
 export function Footer() {
   return (
@@ -23,8 +23,17 @@ export function Footer() {
             </div>
           </div>
           <span className="hidden sm:inline text-slate-700">|</span>
-          <div className="text-slate-300">
-            Un proyecto de <strong className="text-indigo-300 font-semibold">Moon Technologies</strong>
+          <div className="flex items-center gap-2 text-slate-300">
+            <span>Un proyecto de</span>
+            <a 
+              href="https://github.com/Moon-Solutions-S-A-S" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="inline-flex items-center gap-1 text-indigo-300 font-semibold hover:text-white transition-colors"
+            >
+              <Github className="w-3.5 h-3.5" />
+              <span>Moon Technologies</span>
+            </a>
           </div>
         </div>
 
@@ -40,15 +49,34 @@ export function Footer() {
         </div>
 
         {/* Right Side: Creator & Copyright */}
-        <div className="flex flex-col items-center md:items-end gap-1 text-center md:text-right">
-          <div className="flex items-center gap-1 text-slate-300">
+        <div className="flex flex-col items-center md:items-end gap-1.5 text-center md:text-right">
+          <div className="flex items-center gap-1.5 text-slate-300">
             <span>Desarrollado con</span>
             <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500 inline animate-pulse" />
-            <span>en Colombia por <strong className="text-white font-medium">Jose David Carranza Angarita</strong></span>
+            <span>por</span>
+            <a 
+              href="https://github.com/josedavd-07" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="inline-flex items-center gap-1 text-white font-medium hover:text-indigo-300 transition-colors"
+            >
+              <Github className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Jose David Carranza Angarita</span>
+            </a>
           </div>
-          <p className="text-[11px] text-slate-500">
-            © 2026 Moon Technologies. Todos los derechos reservados.
-          </p>
+          <div className="flex items-center gap-3 text-[11px] text-slate-500">
+            <span>© 2026 Moon Technologies (Colombia)</span>
+            <span>•</span>
+            <a 
+              href="https://github.com/josedavd-07/Ideora" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hover:text-slate-300 transition-colors inline-flex items-center gap-1"
+            >
+              <Github className="w-3 h-3" />
+              <span>Ver en GitHub</span>
+            </a>
+          </div>
         </div>
 
       </div>
