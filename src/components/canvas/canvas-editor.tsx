@@ -643,9 +643,11 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
               appState: {
                 viewBackgroundColor: board.data.appState?.viewBackgroundColor || '#090d16',
                 gridSize: board.data.appState?.gridSize || 20,
-                currentItemStrokeColor: '#6366f1',
+                currentItemStrokeColor: '#ffffff',
                 currentItemBackgroundColor: 'transparent',
                 currentItemFillStyle: 'solid',
+                currentItemFontFamily: 1,
+                currentItemRoughness: 1,
               },
               files: board.data.files || {},
             }}

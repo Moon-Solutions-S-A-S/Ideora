@@ -88,16 +88,11 @@ body {
   background: rgba(99, 102, 241, 0.5);
 }
 
-/* Fix Excalidraw styling, properties panel text layout, & custom color picker */
+/* Excalidraw styling theme enhancements */
 .excalidraw {
   --color-primary: #6366f1 !important;
-  font-family: inherit !important;
   width: 100% !important;
   height: 100% !important;
-}
-
-.excalidraw .ToolIcon__keybinding {
-  display: none !important;
 }
 
 .excalidraw .Island {
@@ -106,46 +101,6 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5) !important;
   border-radius: 14px !important;
-}
-
-/* Ensure left sidebar properties menu expands properly and doesn't squish labels */
-.excalidraw .App-menu__left {
-  min-width: 230px !important;
-  max-width: 280px !important;
-}
-
-.excalidraw .App-menu__left .Island {
-  padding: 12px !important;
-  width: 100% !important;
-  max-height: 85vh !important;
-  overflow-y: auto !important;
-}
-
-.excalidraw .App-menu__left h3,
-.excalidraw .App-menu__left label,
-.excalidraw .App-menu__left .fieldset {
-  font-size: 11px !important;
-  font-weight: 600 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.05em !important;
-  color: #94a3b8 !important;
-  white-space: normal !important;
-}
-
-.excalidraw .ToolIcon__icon {
-  color: #e2e8f0 !important;
-}
-
-.excalidraw .App-bottom-bar {
-  background: transparent !important;
-}
-
-.excalidraw .App-toolbar {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  gap: 4px !important;
-  padding: 4px !important;
 }
 
 /* Hand-drawn and custom font helper utility classes */
