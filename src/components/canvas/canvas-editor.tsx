@@ -104,7 +104,7 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
       gridSize: board?.data?.appState?.gridSize || 20,
       currentItemStrokeColor: '#ffffff',
       currentItemBackgroundColor: 'transparent',
-      currentItemFillStyle: 'solid',
+      currentItemFillStyle: 'solid' as const,
       currentItemFontFamily: 1,
       currentItemRoughness: 1,
       ...(board?.data?.appState || {}),
