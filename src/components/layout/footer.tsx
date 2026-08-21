@@ -46,7 +46,7 @@ export function Footer() {
           <div className="flex items-center gap-2 text-slate-300">
             <span>{t('footer_project_by')}</span>
             <a 
-              href="https://github.com/Moon-Solutions-S-A-S" 
+              href="https://github.com/Moon-TechnologiesCO" 
               target="_blank" 
               rel="noopener noreferrer" 
               className="inline-flex items-center gap-1.5 text-indigo-300 font-semibold hover:text-white transition-colors"
@@ -88,7 +88,7 @@ export function Footer() {
             <span>© 2026 Moon Technologies. {t('footer_rights')}</span>
             <span>•</span>
             <a 
-              href="https://github.com/josedavd-07/Ideora" 
+              href="https://github.com/Moon-TechnologiesCO/Ideora" 
               target="_blank" 
               rel="noopener noreferrer"
               className="hover:text-slate-300 transition-colors inline-flex items-center gap-1"
