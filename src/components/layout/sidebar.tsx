@@ -181,9 +181,6 @@ export function Sidebar({
           <Layers className="w-3.5 h-3.5 text-indigo-400" />
           <span>Ideora Canvas v1.0</span>
         </div>
-        <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-medium text-[10px]">
-          MVP
-        </span>
       </div>
     </aside>
   );
