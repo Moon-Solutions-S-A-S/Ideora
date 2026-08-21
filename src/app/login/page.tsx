@@ -210,6 +210,16 @@ export default function LoginPage() {
             {t('login_register_link')}
           </Link>
         </p>
+
+        <div className="pt-2 border-t border-white/5 flex items-center justify-center gap-3 text-[11px] text-slate-500">
+          <Link href="/privacy" className="hover:text-slate-300 transition-colors">
+            Política de Privacidad
+          </Link>
+          <span>•</span>
+          <Link href="/terms" className="hover:text-slate-300 transition-colors">
+            Términos del Servicio
+          </Link>
+        </div>
       </div>
 
       {/* Password Reset Modal */}
