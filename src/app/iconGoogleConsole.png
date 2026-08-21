@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="ideoraBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="50%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#34D399" />
+    </linearGradient>
+    <linearGradient id="ideoraIcon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#E0E7FF" />
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="8" fill="url(#ideoraBg)" />
+  <path d="M16 6L17.8 12.2L24 14L17.8 15.8L16 22L14.2 15.8L8 14L14.2 12.2L16 6Z" fill="url(#ideoraIcon)" />
+  <circle cx="23.5" cy="8.5" r="2" fill="#FFFFFF" opacity="0.9" />
+  <circle cx="8.5" cy="22.5" r="1.5" fill="#FFFFFF" opacity="0.8" />
+</svg>
