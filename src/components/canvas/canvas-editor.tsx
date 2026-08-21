@@ -1,5 +1,6 @@
 'use client';
 
+import '@excalidraw/excalidraw/index.css';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
@@ -629,13 +630,13 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
         </div>
       </header>
 
-      {/* INFINITE CANVAS AREA WITH DIAGRAM PALETTE */}
+      {/* INFINITE CANVAS AREA WITH FIXED DIAGRAM PALETTE */}
       <div className="flex flex-1 w-full h-[calc(100vh-3.5rem)] relative overflow-hidden">
         {/* Left Diagram Shapes Library Sidebar (Draw.io style) */}
         <DiagramPalette onInsertShape={handleInsertPaletteShape} />
 
         {/* Excalidraw Canvas Area */}
-        <div className="excalidraw-container flex-1 h-full relative">
+        <div className="flex-1 h-full relative overflow-hidden">
           <Excalidraw
             excalidrawAPI={(api: any) => setExcalidrawAPI(api)}
             initialData={{

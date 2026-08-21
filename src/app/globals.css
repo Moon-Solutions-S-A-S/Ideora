@@ -24,13 +24,12 @@ body {
   background-attachment: fixed;
 }
 
-/* Canvas Container Stretch */
-.excalidraw-container {
+/* Canvas Container */
+.ideora-canvas-wrapper {
   width: 100%;
   height: calc(100vh - 3.5rem);
   position: relative;
   overflow: hidden;
-  display: flex;
 }
 
 /* Glassmorphism utilities */
