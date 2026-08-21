@@ -13,14 +13,13 @@ import {
   Server, 
   User, 
   Layers, 
-  FileText, 
   Boxes, 
   ChevronLeft, 
   ChevronRight,
+  ChevronDown,
   Search,
   Cpu,
   Shield,
-  Workflow,
   Radio,
   Wifi,
   Zap,
@@ -29,28 +28,47 @@ import {
   Terminal,
   HardDrive,
   Network,
-  Bot
+  Bot,
+  Folder,
+  FolderOpen
 } from 'lucide-react';
 
 interface DiagramPaletteProps {
   onInsertShape: (shapeType: string) => void;
 }
 
+interface CategoryDef {
+  id: string;
+  label: string;
+  icon: any;
+  color: string;
+}
+
 export function DiagramPalette({ onInsertShape }: DiagramPaletteProps) {
   const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('all');
 
-  const categories = [
-    { id: 'all', label: 'Todas' },
-    { id: 'basic', label: 'Básicas' },
-    { id: 'software', label: 'Software' },
-    { id: 'hardware', label: 'Arduino / Electrónica' },
-    { id: 'telecom', label: 'Telecom & Redes' },
-    { id: 'ai', label: 'IA & Datos' },
-    { id: 'cloud', label: 'Nube' },
-    { id: 'uml', label: 'UML' },
+  // Open/Close accordion categories state
+  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({
+    basic: true,
+    software: true,
+    hardware: true,
+    telecom: true,
+    ai: true,
+    cloud: true,
+    uml: true,
+  });
+
+  const categories: CategoryDef[] = [
+    { id: 'basic', label: 'Formas Básicas', icon: Square, color: 'text-indigo-400' },
+    { id: 'software', label: 'Desarrollo de Software', icon: Terminal, color: 'text-purple-400' },
+    { id: 'hardware', label: 'Arduino & Electrónica', icon: Cpu, color: 'text-teal-400' },
+    { id: 'telecom', label: 'Telecom & Redes', icon: Network, color: 'text-sky-400' },
+    { id: 'ai', label: 'Inteligencia Artificial', icon: Brain, color: 'text-pink-400' },
+    { id: 'cloud', label: 'Servicios en Nube (Cloud)', icon: Cloud, color: 'text-amber-400' },
+    { id: 'uml', label: 'Diagramas UML', icon: Boxes, color: 'text-emerald-400' },
   ];
 
   const shapeItems = [
@@ -97,11 +115,22 @@ export function DiagramPalette({ onInsertShape }: DiagramPaletteProps) {
     { id: 'uml_usecase', category: 'uml', label: 'Caso de Uso', icon: Circle, color: 'text-teal-400' },
   ];
 
-  const filteredShapes = shapeItems.filter((item) => {
-    const matchesCat = activeCategory === 'all' || item.category === activeCategory;
-    const matchesSearch = item.label.toLowerCase().includes(search.toLowerCase());
-    return matchesCat && matchesSearch;
-  });
+  const toggleCategory = (catId: string) => {
+    setOpenCategories((prev) => ({
+      ...prev,
+      [catId]: !prev[catId],
+    }));
+  };
+
+  const setAllCategoriesState = (isOpen: boolean) => {
+    const nextState: Record<string, boolean> = {};
+    categories.forEach((cat) => {
+      nextState[cat.id] = isOpen;
+    });
+    setOpenCategories(nextState);
+  };
+
+  const isAllOpen = categories.every((cat) => openCategories[cat.id]);
 
   return (
     <aside className="relative flex shrink-0 z-20">
@@ -132,28 +161,55 @@ export function DiagramPalette({ onInsertShape }: DiagramPaletteProps) {
 
         {!isCollapsed && (
           <>
-            {/* Search Input */}
-            <div className="p-2.5 border-b border-white/10 bg-slate-950/40">
+            {/* Search & Global Accordion Toggle Bar */}
+            <div className="p-2.5 border-b border-white/10 bg-slate-950/40 space-y-2">
               <div className="relative">
                 <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Buscar formas..."
+                  placeholder="Buscar componentes..."
                   className="w-full pl-8 pr-3 py-1.5 rounded-xl glass-input text-xs"
                 />
               </div>
+
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                  Categorías Plegables
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setAllCategoriesState(!isAllOpen)}
+                  className="text-[10px] text-indigo-400 hover:text-indigo-300 font-medium hover:underline"
+                >
+                  {isAllOpen ? 'Plegar Todas' : 'Desplegar Todas'}
+                </button>
+              </div>
             </div>
 
-            {/* Category Pills */}
+            {/* Quick Category Filter Pills */}
             <div className="flex items-center gap-1 p-2 overflow-x-auto border-b border-white/10 scrollbar-none bg-slate-900/30">
+              <button
+                onClick={() => setActiveCategoryFilter('all')}
+                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold shrink-0 transition-all ${
+                  activeCategoryFilter === 'all'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                Todas
+              </button>
               {categories.map((cat) => (
                 <button
                   key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
+                  onClick={() => {
+                    setActiveCategoryFilter(cat.id);
+                    // Ensure the selected category is expanded when clicked
+                    setOpenCategories((prev) => ({ ...prev, [cat.id]: true }));
+                  }}
                   className={`px-2.5 py-1 rounded-md text-[11px] font-semibold shrink-0 transition-all ${
-                    activeCategory === cat.id
+                    activeCategoryFilter === cat.id
                       ? 'bg-indigo-600 text-white shadow-sm'
                       : 'text-slate-400 hover:text-white hover:bg-white/5'
                   }`}
@@ -163,34 +219,74 @@ export function DiagramPalette({ onInsertShape }: DiagramPaletteProps) {
               ))}
             </div>
 
-            {/* Shapes Grid */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-3">
-              <div className="grid grid-cols-2 gap-2">
-                {filteredShapes.map((shape) => {
-                  const Icon = shape.icon;
+            {/* Accordion Categories Container */}
+            <div className="flex-1 overflow-y-auto p-2 space-y-2">
+              {categories
+                .filter((cat) => activeCategoryFilter === 'all' || activeCategoryFilter === cat.id)
+                .map((cat) => {
+                  const CategoryIcon = cat.icon;
+                  const catShapes = shapeItems.filter(
+                    (item) => item.category === cat.id && item.label.toLowerCase().includes(search.toLowerCase())
+                  );
+
+                  // If user is searching and category has matching items, force expand category
+                  const isOpen = search.trim().length > 0 ? catShapes.length > 0 : Boolean(openCategories[cat.id]);
+
+                  if (search.trim().length > 0 && catShapes.length === 0) {
+                    return null;
+                  }
+
                   return (
-                    <button
-                      key={shape.id}
-                      onClick={() => onInsertShape(shape.id)}
-                      className="glass-card p-2.5 rounded-xl border border-white/5 hover:border-indigo-500/50 flex flex-col items-center justify-center gap-2 group transition-all hover:scale-105 active:scale-95 text-center bg-slate-900/50"
-                      title={`Insertar ${shape.label}`}
+                    <div
+                      key={cat.id}
+                      className="rounded-xl border border-white/5 bg-slate-900/40 overflow-hidden transition-all"
                     >
-                      <div className={`p-2 rounded-lg bg-slate-950/80 group-hover:bg-indigo-950/60 ${shape.color}`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <span className="text-[10px] font-semibold text-slate-300 group-hover:text-white line-clamp-1">
-                        {shape.label}
-                      </span>
-                    </button>
+                      {/* Accordion Header */}
+                      <button
+                        type="button"
+                        onClick={() => toggleCategory(cat.id)}
+                        className="w-full flex items-center justify-between p-2.5 bg-slate-900/80 hover:bg-slate-800/80 transition-colors text-left border-b border-white/5"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <CategoryIcon className={`w-4 h-4 shrink-0 ${cat.color}`} />
+                          <span className="text-xs font-bold text-slate-200 truncate">
+                            {cat.label}
+                          </span>
+                          <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-white/10 text-slate-400">
+                            {catShapes.length}
+                          </span>
+                        </div>
+                        <div className="text-slate-400 hover:text-white">
+                          {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                        </div>
+                      </button>
+
+                      {/* Accordion Content Grid */}
+                      {isOpen && (
+                        <div className="p-2 grid grid-cols-2 gap-2 bg-slate-950/30 animate-fade-in">
+                          {catShapes.map((shape) => {
+                            const ShapeIcon = shape.icon;
+                            return (
+                              <button
+                                key={shape.id}
+                                onClick={() => onInsertShape(shape.id)}
+                                className="glass-card p-2.5 rounded-xl border border-white/5 hover:border-indigo-500/50 flex flex-col items-center justify-center gap-1.5 group transition-all hover:scale-105 active:scale-95 text-center bg-slate-900/60"
+                                title={`Insertar ${shape.label}`}
+                              >
+                                <div className={`p-2 rounded-lg bg-slate-950/80 group-hover:bg-indigo-950/60 ${shape.color}`}>
+                                  <ShapeIcon className="w-4 h-4" />
+                                </div>
+                                <span className="text-[10px] font-semibold text-slate-300 group-hover:text-white line-clamp-1">
+                                  {shape.label}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
-              </div>
-
-              {filteredShapes.length === 0 && (
-                <div className="text-center py-8 text-xs text-slate-500">
-                  Sin coincidencias
-                </div>
-              )}
             </div>
           </>
         )}
@@ -198,7 +294,7 @@ export function DiagramPalette({ onInsertShape }: DiagramPaletteProps) {
         {/* Collapsed Icons */}
         {isCollapsed && (
           <div className="flex-1 overflow-y-auto py-3 flex flex-col items-center gap-3">
-            {shapeItems.slice(0, 10).map((shape) => {
+            {shapeItems.slice(0, 12).map((shape) => {
               const Icon = shape.icon;
               return (
                 <button
