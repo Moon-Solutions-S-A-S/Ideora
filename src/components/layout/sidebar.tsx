@@ -159,11 +159,9 @@ export function Sidebar({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (confirm(`¿Eliminar el espacio "${ws.name}"?`)) {
-                            onDeleteWorkspace(ws.id);
-                          }
+                          onDeleteWorkspace(ws.id);
                         }}
-                        title="Eliminar espacio"
+                        title="Delete workspace"
                         className="p-1 text-slate-400 hover:text-rose-400 rounded transition-colors"
                       >
                         <Trash2 className="w-3.5 h-3.5" />

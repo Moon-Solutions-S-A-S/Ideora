@@ -247,20 +247,16 @@ export default function DashboardPage() {
                       />
                     </label>
 
-                    {workspaces.length > 1 && (
-                      <button
-                        onClick={() => {
-                          if (confirm(`¿Eliminar espacio de trabajo "${ws.name}"?`)) {
-                            deleteWorkspace(ws.id);
-                            if (activeFilter === ws.id) setActiveFilter('all');
-                          }
-                        }}
-                        title="Eliminar espacio"
-                        className="p-1 text-slate-500 hover:text-rose-400 transition-colors"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    )}
+                    <button
+                      onClick={() => {
+                        deleteWorkspace(ws.id);
+                        if (activeFilter === ws.id) setActiveFilter('all');
+                      }}
+                      title="Delete workspace"
+                      className="p-1 text-slate-500 hover:text-rose-400 transition-colors"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
                   </div>
                 );
               })}
