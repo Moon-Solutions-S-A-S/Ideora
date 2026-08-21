@@ -122,6 +122,30 @@ export const translations = {
     footer_by: "by",
     footer_rights: "All rights reserved.",
     footer_view_github: "View on GitHub",
+
+    // Privacy & Terms
+    privacy_title: "Privacy Policy",
+    privacy_updated: "Last updated: August 21, 2026",
+    privacy_intro: "At Ideora, we take your privacy and data security seriously. This policy explains how we collect, use, and protect your information when using our infinite canvas platform.",
+    privacy_sec1_title: "1. Information We Collect",
+    privacy_sec1_desc: "We only collect the necessary information to provide our service:",
+    privacy_sec1_item1: "Account data: Your username, email address, and profile picture from your authentication provider (Google / Supabase).",
+    privacy_sec1_item2: "Content created: Diagrams, canvases, notes, and files created in the platform.",
+    privacy_sec1_item3: "Technical data: Basic browser information and logs to maintain security and stability.",
+    privacy_sec2_title: "2. Data Usage & Google OAuth",
+    privacy_sec2_desc1: "We use your data solely to provide access to your workspace and enable real-time synchronization. We do not sell or share your personal information with third parties for advertising.",
+    privacy_sec2_desc2: "When connecting your Google account, we use strictly necessary permissions to save your diagrams to your storage or authenticate your session.",
+    privacy_sec3_title: "3. Contact",
+    privacy_sec3_desc: "If you have questions about this policy or wish to exercise your privacy rights, contact us at:",
+
+    terms_title: "Terms and Conditions of Service",
+    terms_updated: "Last updated: August 21, 2026",
+    terms_intro: "By accessing and using Ideora, you agree to comply with the following terms and conditions. Please read them carefully.",
+    terms_sec1_title: "1. Acceptable Use of the Platform",
+    terms_sec1_desc: "Ideora is a collaborative canvas tool designed to create, organize, and interconnect ideas. You agree to make appropriate use of the platform without violating third-party rights or engaging in illegal activities.",
+    terms_sec2_title: "2. Accounts and Content Ownership",
+    terms_sec2_desc: "You retain all intellectual property rights over the canvases and content you create in Ideora. You are responsible for maintaining the security of your access credentials.",
+    back_to_home: "Back to Home",
   },
   es: {
     // Header
@@ -240,6 +264,30 @@ export const translations = {
     footer_by: "por",
     footer_rights: "Todos los derechos reservados.",
     footer_view_github: "Ver en GitHub",
+
+    // Privacy & Terms
+    privacy_title: "Política de Privacidad",
+    privacy_updated: "Última actualización: 21 de agosto de 2026",
+    privacy_intro: "En Ideora nos tomamos muy en serio la privacidad y seguridad de tus datos. Esta política explica cómo recopilamos, utilizamos y protegemos tu información cuando utilizas nuestra plataforma de lienzo infinito.",
+    privacy_sec1_title: "1. Información que Recopilamos",
+    privacy_sec1_desc: "Recopilamos únicamente la información necesaria para brindarte el servicio:",
+    privacy_sec1_item1: "Datos de cuenta: Tu nombre de usuario, correo electrónico y foto de perfil provenientes de tu proveedor de autenticación (Google / Supabase).",
+    privacy_sec1_item2: "Contenido creado: Diagramas, lienzos, notas y archivos que crees en la plataforma.",
+    privacy_sec1_item3: "Datos técnicos: Información básica de navegador y logs para mantener la seguridad y estabilidad del servicio.",
+    privacy_sec2_title: "2. Uso de los Datos y Google OAuth",
+    privacy_sec2_desc1: "Utilizamos tus datos únicamente para proporcionarte acceso a tu espacio de trabajo y permitir la sincronización en tiempo real. No vendemos ni compartimos tu información personal con terceros para fines publicitarios.",
+    privacy_sec2_desc2: "Al conectar tu cuenta de Google, utilizamos los permisos estrictamente necesarios para guardar tus diagramas en tu almacenamiento o autenticar tu sesión.",
+    privacy_sec3_title: "3. Contacto",
+    privacy_sec3_desc: "Si tienes preguntas sobre esta política o deseas ejercer tus derechos de privacidad, contáctanos en:",
+
+    terms_title: "Términos y Condiciones del Servicio",
+    terms_updated: "Última actualización: 21 de agosto de 2026",
+    terms_intro: "Al acceder y utilizar Ideora, aceptas cumplir con los siguientes términos y condiciones de uso. Por favor léelos atentamente.",
+    terms_sec1_title: "1. Uso Aceptable de la Plataforma",
+    terms_sec1_desc: "Ideora es una herramienta de lienzo colaborativo diseñada para crear, organizar e interconectar ideas. Te comprometes a hacer un uso adecuado de la plataforma sin vulnerar derechos de terceros ni realizar actividades ilícitas.",
+    terms_sec2_title: "2. Cuentas y Propiedad de Contenido",
+    terms_sec2_desc: "Mantienes todos los derechos de propiedad intelectual sobre los lienzos y contenido que creas en Ideora. Eres responsable de mantener la seguridad de tus credenciales de acceso.",
+    back_to_home: "Volver al Inicio",
   }
 };
 
