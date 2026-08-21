@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { ArrowLeft, FileCheck, Scale, AlertCircle } from 'lucide-react';
+import { Footer } from '@/components/layout/footer';
 
 export const metadata = {
   title: 'Términos del Servicio | Ideora',
@@ -9,12 +10,12 @@ export const metadata = {
 
 export default function TermsPage() {
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-200 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <main className="min-h-screen bg-slate-950 text-slate-200 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden flex flex-col justify-between">
       {/* Background glow effects */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-4xl mx-auto space-y-8 relative z-10">
+      <div className="max-w-4xl mx-auto space-y-8 relative z-10 w-full mb-16">
         {/* Navigation */}
         <Link
           href="/"
@@ -59,6 +60,8 @@ export default function TermsPage() {
           </section>
         </div>
       </div>
+
+      <Footer />
     </main>
   );
 }

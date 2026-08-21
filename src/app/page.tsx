@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Header } from '@/components/layout/header';
+import { Footer } from '@/components/layout/footer';
 import { useTranslation } from '@/lib/i18n/language-context';
 import { 
   Sparkles, 
@@ -197,16 +198,7 @@ export default function LandingPage() {
         </section>
       </main>
 
-      {/* FOOTER */}
-      <footer className="glass-panel border-t border-white/10 py-8 px-6 text-center text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 font-bold text-slate-300">
-            <Sparkles className="w-4 h-4 text-indigo-400" />
-            <span>Ideora Platform © 2026</span>
-          </div>
-          <p>Powered by Next.js, Supabase, TypeScript, and Tailwind CSS.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ShieldCheck, Lock, Eye, FileText } from 'lucide-react';
+import { Footer } from '@/components/layout/footer';
 
 export const metadata = {
   title: 'Política de Privacidad | Ideora',
@@ -77,6 +78,9 @@ export default function PrivacyPage() {
             <p className="text-xs sm:text-sm text-indigo-300 font-medium">ing.josedavidcarranzaangarita@gmail.com</p>
           </section>
         </div>
+      </div>
+      <div className="mt-16">
+        <Footer />
       </div>
     </main>
   );
