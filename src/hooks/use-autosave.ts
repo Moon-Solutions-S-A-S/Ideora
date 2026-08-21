@@ -30,15 +30,15 @@ export function useAutosave(boardId: string, delay: number = 1000) {
 
   const triggerAutosave = useCallback((data: CanvasData, name?: string) => {
     pendingDataRef.current = { data, name };
-    setSaveStatus('saving');
 
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
 
-    timerRef.current = setTimeout(() => {
+    timerRef.current = setTimeout(async () => {
       if (pendingDataRef.current) {
-        saveNow(pendingDataRef.current.data, pendingDataRef.current.name);
+        setSaveStatus('saving');
+        await saveNow(pendingDataRef.current.data, pendingDataRef.current.name);
         pendingDataRef.current = null;
       }
     }, delay);

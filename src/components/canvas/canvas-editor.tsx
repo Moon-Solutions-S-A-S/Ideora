@@ -762,7 +762,7 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
             theme="dark"
             UIOptions={{
               canvasActions: {
-                changeViewBackgroundColor: true,
+                changeViewBackgroundColor: false,
                 clearCanvas: true,
                 export: false,
                 loadScene: false,

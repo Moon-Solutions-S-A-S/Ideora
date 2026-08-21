@@ -8,6 +8,7 @@ const STORAGE_KEYS = {
   USER: 'ideora_user_profile',
   WORKSPACES: 'ideora_workspaces',
   BOARDS: 'ideora_boards',
+  INITIALIZED: 'ideora_store_initialized',
 };
 
 // Initial Seed Data for Demo & Out-of-box experience
@@ -243,9 +244,11 @@ export class IdeoraStore {
     }
 
     // Local fallback
+    const isInit = getItem<boolean>(STORAGE_KEYS.INITIALIZED, false);
     const local = getItem<Workspace[]>(STORAGE_KEYS.WORKSPACES, []);
-    if (local.length === 0) {
+    if (!isInit && local.length === 0) {
       setItem(STORAGE_KEYS.WORKSPACES, DEFAULT_WORKSPACES);
+      setItem(STORAGE_KEYS.INITIALIZED, true);
       return DEFAULT_WORKSPACES;
     }
     return local;
@@ -373,9 +376,11 @@ export class IdeoraStore {
     }
 
     // Local fallback
+    const isInit = getItem<boolean>(STORAGE_KEYS.INITIALIZED, false);
     const local = getItem<Board[]>(STORAGE_KEYS.BOARDS, []);
-    if (local.length === 0) {
+    if (!isInit) {
       setItem(STORAGE_KEYS.BOARDS, DEFAULT_BOARDS);
+      setItem(STORAGE_KEYS.INITIALIZED, true);
       return includeDeleted ? DEFAULT_BOARDS : DEFAULT_BOARDS.filter((b) => !b.deletedAt);
     }
     return includeDeleted ? local : local.filter((b) => !b.deletedAt);
