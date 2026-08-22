@@ -1,90 +1,8 @@
-// AI Diagram Generator engine for Ideora
+import { createExcalidrawNode, createExcalidrawLinear } from '../canvas/component-registry';
+
 export interface AIDiagramRequest {
   prompt: string;
-  type: 'flowchart' | 'mindmap' | 'uml' | 'architecture';
-}
-
-function createExcalidrawNode(
-  id: string,
-  type: 'rectangle' | 'ellipse' | 'diamond',
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  strokeColor: string,
-  backgroundColor: string,
-  textLabel: string
-) {
-  const nodeElement = {
-    id,
-    type,
-    x,
-    y,
-    width,
-    height,
-    strokeColor,
-    backgroundColor,
-    fillStyle: 'solid',
-    strokeWidth: 2,
-    roughness: 1,
-    opacity: 100,
-    groupIds: [],
-    roundness: { type: 3 },
-    seed: Math.floor(Math.random() * 100000),
-    version: 1,
-    versionNonce: Math.floor(Math.random() * 100000),
-    isDeleted: false,
-    boundElements: null,
-    updated: 1,
-    link: null,
-    locked: false,
-  };
-
-  const textElement = {
-    id: `${id}_text`,
-    type: 'text',
-    x: x + 15,
-    y: y + Math.floor(height / 2) - 12,
-    width: width - 30,
-    height: 24,
-    strokeColor: '#ffffff',
-    backgroundColor: 'transparent',
-    fontSize: 16,
-    fontFamily: 1,
-    text: textLabel,
-    textAlign: 'center',
-    verticalAlign: 'middle',
-    containerId: id,
-    seed: Math.floor(Math.random() * 100000),
-    version: 1,
-    versionNonce: Math.floor(Math.random() * 100000),
-    isDeleted: false,
-  };
-
-  return [nodeElement, textElement];
-}
-
-function createExcalidrawArrow(id: string, startX: number, startY: number, endX: number, endY: number, color = '#6366f1') {
-  return {
-    id,
-    type: 'arrow',
-    x: startX,
-    y: startY,
-    width: endX - startX,
-    height: endY - startY,
-    strokeColor: color,
-    strokeWidth: 2,
-    roughness: 1,
-    opacity: 100,
-    groupIds: [],
-    points: [
-      [0, 0],
-      [endX - startX, endY - startY],
-    ],
-    seed: Math.floor(Math.random() * 100000),
-    version: 1,
-    isDeleted: false,
-  };
+  type?: 'flowchart' | 'mindmap' | 'uml' | 'architecture' | 'er_diagram' | 'electronics' | 'devops' | 'ai_rag' | 'networking';
 }
 
 export async function generateDiagramElements(request: AIDiagramRequest): Promise<any[]> {
@@ -92,7 +10,7 @@ export async function generateDiagramElements(request: AIDiagramRequest): Promis
   const promptLower = request.prompt.toLowerCase();
   const elements: any[] = [];
 
-  // Check if user has optional custom Gemini API Key
+  // Check custom Gemini API Key in localStorage if provided
   const geminiApiKey = typeof window !== 'undefined' ? localStorage.getItem('ideora_gemini_api_key') : null;
 
   if (geminiApiKey) {
@@ -103,7 +21,7 @@ export async function generateDiagramElements(request: AIDiagramRequest): Promis
         body: JSON.stringify({
           contents: [{
             parts: [{
-              text: `Generate a list of 4 key steps/nodes for a diagram about: "${request.prompt}". Return ONLY a JSON array of strings for step titles, example: ["Inicio", "Proceso A", "Proceso B", "Resultado"]`
+              text: `Genera una lista ordenada de 5 componentes o pasos clave para un diagrama de ingeniería sobre: "${request.prompt}". Devuelve ÚNICAMENTE un arreglo JSON de cadenas con los títulos de los nodos, ejemplo: ["Cliente", "API Gateway", "Servicio Auth", "Base de Datos", "Cache"]`
             }]
           }]
         })
@@ -115,14 +33,14 @@ export async function generateDiagramElements(request: AIDiagramRequest): Promis
         if (Array.isArray(parsedTitles) && parsedTitles.length > 0) {
           let startX = 100;
           parsedTitles.forEach((title: string, index: number) => {
-            const nodeId = `ai_node_${ts}_${index}`;
+            const nodeId = `ai_gen_${ts}_${index}`;
             const color = index === 0 ? '#3b82f6' : index === parsedTitles.length - 1 ? '#10b981' : '#8b5cf6';
             const bgColor = index === 0 ? '#1e3a8a' : index === parsedTitles.length - 1 ? '#064e3b' : '#4c1d95';
             
-            elements.push(...createExcalidrawNode(nodeId, 'rectangle', startX, 250, 180, 80, color, bgColor, title));
+            elements.push(...createExcalidrawNode(nodeId, 'rectangle', startX, 250, 180, 80, color, bgColor, title, { roundnessType: 3 }));
 
             if (index < parsedTitles.length - 1) {
-              elements.push(createExcalidrawArrow(`ai_arrow_${ts}_${index}`, startX + 180, 290, startX + 260, 290));
+              elements.push(...createExcalidrawLinear(`ai_arr_${ts}_${index}`, 'arrow', startX + 180, 290, 80, 0, [[0, 0], [80, 0]], color));
             }
             startX += 260;
           });
@@ -130,53 +48,75 @@ export async function generateDiagramElements(request: AIDiagramRequest): Promis
         }
       }
     } catch (e) {
-      console.warn('Gemini API call fallback to built-in generator:', e);
+      console.warn('Gemini API call fallback to built-in intelligent engine:', e);
     }
   }
 
-  // Fast Built-in Multi-type Generator
-  if (request.type === 'mindmap' || promptLower.includes('mapa') || promptLower.includes('mindmap')) {
-    // Central Node
-    const centerTitle = request.prompt.length > 20 ? request.prompt.slice(0, 20) + '...' : request.prompt || 'Idea Central';
-    elements.push(...createExcalidrawNode(`mm_center_${ts}`, 'ellipse', 450, 250, 220, 100, '#ec4899', '#831843', centerTitle));
+  // Built-in Domain Generators for prompt intent:
 
-    const branches = [
-      { label: 'Concepto 1', x: 200, y: 120, color: '#3b82f6', bg: '#1e3a8a' },
-      { label: 'Estrategia', x: 750, y: 120, color: '#10b981', bg: '#064e3b' },
-      { label: 'Recursos', x: 200, y: 400, color: '#f59e0b', bg: '#78350f' },
-      { label: 'Resultados', x: 750, y: 400, color: '#8b5cf6', bg: '#4c1d95' },
-    ];
+  // 1. ELECTRONICS / ARDUINO / EMBEDDED
+  if (promptLower.includes('arduino') || promptLower.includes('esp32') || promptLower.includes('circuito') || promptLower.includes('sensor') || promptLower.includes('electronica')) {
+    elements.push(...createExcalidrawNode(`ard_mcu_${ts}`, 'rectangle', 350, 250, 190, 110, '#14b8a6', '#042f2e', '📟 ESP32 / Arduino MCU\n[VCC | GND | GPIO4 | A0]', { roundnessType: 3 }));
+    elements.push(...createExcalidrawNode(`ard_sns_${ts}`, 'ellipse', 100, 180, 140, 80, '#f59e0b', '#451a03', '📡 Sensor Temp / I2C\n[SDA / SCL]'));
+    elements.push(...createExcalidrawNode(`ard_act_${ts}`, 'rectangle', 630, 180, 150, 80, '#ef4444', '#7f1d1d', '⚡ Actuador / Motor PWM', { roundnessType: 3 }));
+    elements.push(...createExcalidrawNode(`ard_disp_${ts}`, 'rectangle', 630, 310, 150, 80, '#38bdf8', '#0c4a6e', '📺 Pantalla OLED I2C', { roundnessType: 3 }));
 
-    branches.forEach((b, i) => {
-      const bId = `mm_branch_${ts}_${i}`;
-      elements.push(...createExcalidrawNode(bId, 'rectangle', b.x, b.y, 160, 70, b.color, b.bg, b.label));
-      
-      const arrowStartX = b.x > 450 ? 560 : 450;
-      const arrowStartY = b.y > 250 ? 300 : 270;
-      elements.push(createExcalidrawArrow(`mm_arrow_${ts}_${i}`, arrowStartX, arrowStartY, b.x + 80, b.y + 35, b.color));
-    });
+    elements.push(...createExcalidrawLinear(`ard_a1_${ts}`, 'arrow', 240, 220, 110, 50, [[0, 0], [110, 50]], '#f59e0b', { label: 'Signal' }));
+    elements.push(...createExcalidrawLinear(`ard_a2_${ts}`, 'arrow', 540, 280, 90, -60, [[0, 0], [90, -60]], '#ef4444', { label: 'PWM Out' }));
+    elements.push(...createExcalidrawLinear(`ard_a3_${ts}`, 'arrow', 540, 310, 90, 40, [[0, 0], [90, 40]], '#38bdf8', { label: 'Display Bus' }));
 
     return elements;
   }
 
-  // Architecture / System Flowchart
-  const steps = [
-    { title: 'Cliente / App', bg: '#1e3a8a', border: '#3b82f6' },
-    { title: 'API Gateway', bg: '#4c1d95', border: '#8b5cf6' },
-    { title: 'Servicio Lógica', bg: '#78350f', border: '#f59e0b' },
-    { title: 'Base de Datos', bg: '#064e3b', border: '#10b981' },
-  ];
+  // 2. UML CLASS DIAGRAM / OBJECT MODEL
+  if (promptLower.includes('uml') || promptLower.includes('clase') || promptLower.includes('class') || promptLower.includes('sequence')) {
+    elements.push(...createExcalidrawNode(`uml_c1_${ts}`, 'rectangle', 100, 220, 180, 140, '#ec4899', '#831843', '<<Class>> User\n------------------\n+ id: UUID\n+ email: String\n------------------\n+ login(): Boolean', { roundnessType: 3 }));
+    elements.push(...createExcalidrawNode(`uml_c2_${ts}`, 'rectangle', 380, 220, 180, 140, '#a855f7', '#4c1d95', '<<Class>> Order\n------------------\n+ id: UUID\n+ total: Decimal\n------------------\n+ processPayment()', { roundnessType: 3 }));
+    elements.push(...createExcalidrawNode(`uml_c3_${ts}`, 'rectangle', 660, 220, 180, 140, '#06b6d4', '#164e63', '<<Class>> Payment\n------------------\n+ transactionId: String\n+ status: Enum\n------------------\n+ refund()', { roundnessType: 3 }));
 
-  let currentX = 120;
-  steps.forEach((s, idx) => {
-    const nodeId = `sys_node_${ts}_${idx}`;
-    elements.push(...createExcalidrawNode(nodeId, 'rectangle', currentX, 260, 180, 85, s.border, s.bg, s.title));
+    elements.push(...createExcalidrawLinear(`uml_rel1_${ts}`, 'arrow', 280, 290, 100, 0, [[0, 0], [100, 0]], '#ec4899', { label: '1 .. *' }));
+    elements.push(...createExcalidrawLinear(`uml_rel2_${ts}`, 'arrow', 560, 290, 100, 0, [[0, 0], [100, 0]], '#a855f7', { label: '1 .. 1' }));
 
-    if (idx < steps.length - 1) {
-      elements.push(createExcalidrawArrow(`sys_arrow_${ts}_${idx}`, currentX + 180, 302, currentX + 250, 302, s.border));
-    }
-    currentX += 250;
-  });
+    return elements;
+  }
+
+  // 3. DATABASE / ER DIAGRAM
+  if (promptLower.includes('er') || promptLower.includes('database') || promptLower.includes('base de datos') || promptLower.includes('tabla') || promptLower.includes('sql')) {
+    elements.push(...createExcalidrawNode(`er_t1_${ts}`, 'rectangle', 120, 200, 190, 140, '#06b6d4', '#164e63', '📋 users\n================\n🔑 id: UUID (PK)\n📧 email: VARCHAR\n🔐 password_hash: TEXT', { roundnessType: 3 }));
+    elements.push(...createExcalidrawNode(`er_t2_${ts}`, 'rectangle', 420, 200, 190, 140, '#3b82f6', '#1e3a8a', '📋 products\n================\n🔑 id: UUID (PK)\n🏷️ name: VARCHAR\n💵 price: DECIMAL', { roundnessType: 3 }));
+    elements.push(...createExcalidrawNode(`er_t3_${ts}`, 'rectangle', 720, 200, 190, 140, '#f59e0b', '#78350f', '📋 orders\n================\n🔑 id: UUID (PK)\n👤 user_id: UUID (FK)\n📦 product_id: UUID (FK)', { roundnessType: 3 }));
+
+    elements.push(...createExcalidrawLinear(`er_fk1_${ts}`, 'arrow', 310, 270, 110, 0, [[0, 0], [110, 0]], '#06b6d4', { label: '1 : N' }));
+    elements.push(...createExcalidrawLinear(`er_fk2_${ts}`, 'arrow', 610, 270, 110, 0, [[0, 0], [110, 0]], '#3b82f6', { label: '1 : N' }));
+
+    return elements;
+  }
+
+  // 4. DEVOPS / KUBERNETES / CI-CD PIPELINE
+  if (promptLower.includes('devops') || promptLower.includes('ci/cd') || promptLower.includes('kubernetes') || promptLower.includes('docker') || promptLower.includes('pipeline')) {
+    elements.push(...createExcalidrawNode(`cicd_g_${ts}`, 'rectangle', 100, 240, 160, 80, '#f43f5e', '#881337', '🐙 GitHub Repo\n[Git Push main]', { roundnessType: 3 }));
+    elements.push(...createExcalidrawNode(`cicd_act_${ts}`, 'rectangle', 330, 240, 170, 80, '#10b981', '#064e3b', '⚙️ GitHub Actions\n[Build & Test]', { roundnessType: 3 }));
+    elements.push(...createExcalidrawNode(`cicd_dck_${ts}`, 'rectangle', 570, 240, 170, 80, '#3b82f6', '#1e3a8a', '🐳 Docker Registry\n[Push Image v1.0]', { roundnessType: 3 }));
+    elements.push(...createExcalidrawNode(`cicd_k8s_${ts}`, 'rectangle', 810, 240, 170, 80, '#a855f7', '#4c1d95', '☸️ Kubernetes Cluster\n[Helm Deploy Pods]', { roundnessType: 3 }));
+
+    elements.push(...createExcalidrawLinear(`cicd_a1_${ts}`, 'arrow', 260, 280, 70, 0, [[0, 0], [70, 0]], '#f43f5e', { label: 'Webhook' }));
+    elements.push(...createExcalidrawLinear(`cicd_a2_${ts}`, 'arrow', 500, 280, 70, 0, [[0, 0], [70, 0]], '#10b981', { label: 'Image Push' }));
+    elements.push(...createExcalidrawLinear(`cicd_a3_${ts}`, 'arrow', 740, 280, 70, 0, [[0, 0], [70, 0]], '#3b82f6', { label: 'Kubelet' }));
+
+    return elements;
+  }
+
+  // 5. DEFAULT: SYSTEM ARCHITECTURE & MICROSERVICES
+  elements.push(...createExcalidrawNode(`sys_cli_${ts}`, 'rectangle', 100, 240, 160, 80, '#3b82f6', '#1e3a8a', '💻 Client App\n[React / Mobile]', { roundnessType: 3 }));
+  elements.push(...createExcalidrawNode(`sys_gw_${ts}`, 'rectangle', 330, 240, 160, 80, '#f43f5e', '#881337', '🛡️ API Gateway\n[Auth / Router]', { roundnessType: 3 }));
+  elements.push(...createExcalidrawNode(`sys_ms_${ts}`, 'rectangle', 560, 240, 170, 80, '#a855f7', '#4c1d95', '📦 Core Microservice\n[Node.js / Express]', { roundnessType: 3 }));
+  elements.push(...createExcalidrawNode(`sys_db_${ts}`, 'rectangle', 800, 180, 160, 80, '#06b6d4', '#164e63', '🗄️ PostgreSQL\n[Data Store]', { roundnessType: 3 }));
+  elements.push(...createExcalidrawNode(`sys_cch_${ts}`, 'rectangle', 800, 300, 160, 80, '#ef4444', '#7f1d1d', '⚡ Redis Cache\n[Session Store]', { roundnessType: 3 }));
+
+  elements.push(...createExcalidrawLinear(`sys_l1_${ts}`, 'arrow', 260, 280, 70, 0, [[0, 0], [70, 0]], '#3b82f6', { label: 'HTTPS' }));
+  elements.push(...createExcalidrawLinear(`sys_l2_${ts}`, 'arrow', 490, 280, 70, 0, [[0, 0], [70, 0]], '#f43f5e', { label: 'REST' }));
+  elements.push(...createExcalidrawLinear(`sys_l3_${ts}`, 'arrow', 730, 260, 70, -40, [[0, 0], [70, -40]], '#06b6d4', { label: 'SQL' }));
+  elements.push(...createExcalidrawLinear(`sys_l4_${ts}`, 'arrow', 730, 300, 70, 40, [[0, 0], [70, 40]], '#ef4444', { label: 'Redis' }));
 
   return elements;
 }

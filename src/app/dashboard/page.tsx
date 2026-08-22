@@ -362,7 +362,7 @@ export default function DashboardPage() {
             initData = {
               elements: [
                 { id: 'm1', type: 'ellipse', x: 400, y: 250, width: 180, height: 100, strokeColor: '#6366f1', backgroundColor: '#312e81', fillStyle: 'solid', roughness: 1 },
-                { id: 'mt1', type: 'text', x: 425, y: 285, width: 130, height: 30, text: 'Idea Central', strokeColor: '#ffffff', fontSize: 20 },
+                { id: 'mt1', type: 'text', x: 425, y: 285, width: 130, height: 30, text: 'Idea Central', originalText: 'Idea Central', strokeColor: '#ffffff', fontSize: 20 },
               ],
               appState: { viewBackgroundColor: '#090d16' },
             };
@@ -370,7 +370,7 @@ export default function DashboardPage() {
             initData = {
               elements: [
                 { id: 'f1', type: 'rectangle', x: 350, y: 150, width: 160, height: 70, strokeColor: '#10b981', backgroundColor: '#064e3b', fillStyle: 'solid', roundness: { type: 3 } },
-                { id: 'ft1', type: 'text', x: 380, y: 172, width: 100, height: 25, text: 'Inicio', strokeColor: '#ffffff', fontSize: 18 },
+                { id: 'ft1', type: 'text', x: 380, y: 172, width: 100, height: 25, text: 'Inicio', originalText: 'Inicio', strokeColor: '#ffffff', fontSize: 18 },
               ],
               appState: { viewBackgroundColor: '#090d16' },
             };

@@ -7,12 +7,20 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Board, CanvasData } from '@/types/board';
 import { Workspace } from '@/types/workspace';
+import { DiagramMode } from '@/types/component-registry';
+import { COMPONENT_CATALOG } from '@/lib/canvas/component-registry';
+import { OFFICIAL_COMPONENT_CATALOG } from '@/lib/excalidraw-libraries/library-registry';
 import { useAutosave } from '@/hooks/use-autosave';
 import { useTranslation } from '@/lib/i18n/language-context';
 import { exportToIdeoraFile, exportToJsonFile, parseIdeoraFile } from '@/lib/canvas/export-import';
 import { AIModal } from '@/components/canvas/ai-modal';
 import { GDriveModal } from '@/components/canvas/gdrive-modal';
 import { DiagramPalette } from '@/components/canvas/diagram-palette';
+import { PropertiesPanel } from '@/components/canvas/properties-panel';
+import { TemplatesModal } from '@/components/canvas/templates-modal';
+import { LibraryModal } from '@/components/canvas/library-modal';
+import { DiagramTemplate } from '@/lib/canvas/templates';
+import { sanitizeElements } from '@/lib/canvas/element-sanitizer';
 import { 
   ArrowLeft, 
   Sparkles, 
@@ -38,7 +46,7 @@ const Excalidraw = dynamic(
     loading: () => (
       <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 text-slate-300 gap-3">
         <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
-        <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Loading Ideora Canvas...</span>
+        <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Cargando Lienzo de Ingeniería Ideora...</span>
       </div>
     ),
   }
@@ -58,10 +66,18 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
+  // Diagram Mode
+  const [activeMode, setActiveMode] = useState<DiagramMode>('general');
+
+  // Selected element for Properties Panel
+  const [selectedElement, setSelectedElement] = useState<any | null>(null);
+
   // Modals
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [isGDriveModalOpen, setIsGDriveModalOpen] = useState(false);
-  const [canvasBg, setCanvasBg] = useState<string>(board.data?.appState?.viewBackgroundColor || '#090d16');
+  const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
+  const [isLibrariesOpen, setIsLibrariesOpen] = useState(false);
+  const [canvasBg, setCanvasBg] = useState<string>(board.data?.appState?.viewBackgroundColor || '#121212');
 
   const handleCanvasBgChange = (color: string) => {
     setCanvasBg(color);
@@ -96,56 +112,7 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
   // Initial elements and appState computed ONCE on mount for Excalidraw initialData
   const [initialData] = useState(() => {
     const rawElements = board?.data?.elements;
-    const elements = Array.isArray(rawElements)
-      ? rawElements
-          .filter((el: any) => el && typeof el === 'object' && typeof el.type === 'string')
-          .map((el: any) => {
-            const cleaned: any = {
-              id: el.id || `el_${Math.random().toString(36).substring(2, 9)}`,
-              type: el.type,
-              x: typeof el.x === 'number' ? el.x : 0,
-              y: typeof el.y === 'number' ? el.y : 0,
-              width: typeof el.width === 'number' ? el.width : 100,
-              height: typeof el.height === 'number' ? el.height : 100,
-              angle: typeof el.angle === 'number' ? el.angle : 0,
-              strokeColor: el.strokeColor || '#ffffff',
-              backgroundColor: el.backgroundColor || 'transparent',
-              fillStyle: el.fillStyle || 'solid',
-              strokeWidth: typeof el.strokeWidth === 'number' ? el.strokeWidth : 1,
-              strokeStyle: el.strokeStyle || 'solid',
-              roughness: typeof el.roughness === 'number' ? el.roughness : 1,
-              opacity: typeof el.opacity === 'number' ? el.opacity : 100,
-              groupIds: Array.isArray(el.groupIds) ? el.groupIds : [],
-              frameId: el.frameId || null,
-              roundness: el.roundness || null,
-              seed: el.seed || Math.floor(Math.random() * 100000),
-              version: el.version || 1,
-              versionNonce: el.versionNonce || Math.floor(Math.random() * 100000),
-              isDeleted: Boolean(el.isDeleted),
-              boundElements: Array.isArray(el.boundElements) ? el.boundElements : null,
-              updated: el.updated || Date.now(),
-              link: el.link || null,
-              locked: Boolean(el.locked),
-              ...el,
-            };
-
-            if (['arrow', 'line', 'freedraw'].includes(cleaned.type)) {
-              if (!Array.isArray(cleaned.points) || cleaned.points.length === 0) {
-                cleaned.points = [[0, 0], [cleaned.width || 100, cleaned.height || 0]];
-              }
-            }
-
-            if (!Array.isArray(cleaned.groupIds)) {
-              cleaned.groupIds = [];
-            }
-
-            if (!Array.isArray(cleaned.boundElements) && cleaned.boundElements !== null) {
-              cleaned.boundElements = null;
-            }
-
-            return cleaned;
-          })
-      : [];
+    const elements = sanitizeElements(Array.isArray(rawElements) ? rawElements : []);
 
     const rawAppState = board?.data?.appState || {};
     const { collaborators, ...restAppState } = rawAppState;
@@ -168,153 +135,133 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
     };
   });
 
-  // Auto-fit content ONCE when API is ready on initial mount
-  const hasFittedContentRef = useRef(false);
+  const { saveStatus, lastSavedTime, triggerAutosave, saveNow } = useAutosave(
+    board.id,
+    1500
+  );
+
+  // Focus board content on first mount
+  const isCentered = useRef(false);
   useEffect(() => {
-    if (excalidrawAPI && !hasFittedContentRef.current && initialData.elements.length > 0) {
-      hasFittedContentRef.current = true;
+    if (excalidrawAPI && !isCentered.current) {
+      isCentered.current = true;
       setTimeout(() => {
-        try {
-          excalidrawAPI.scrollToContent(initialData.elements, {
-            fitToViewport: true,
-            animate: false,
-          });
-        } catch (e) {
-          // ignore
+        const elements = excalidrawAPI.getSceneElements();
+        if (elements && elements.length > 0) {
+          excalidrawAPI.scrollToContent(elements, { fitToViewport: true, viewportZoomFactor: 0.8 });
         }
       }, 300);
     }
-  }, [excalidrawAPI, initialData.elements]);
+  }, [excalidrawAPI]);
 
-  // Autosave hook
-  const { saveStatus, triggerAutosave, saveNow } = useAutosave(board.id, 1000);
-
-
-
-  // Excalidraw helpers (dynamically imported when exporting images)
-  const exportToBlobRef = useRef<any>(null);
-  const exportToSvgRef = useRef<any>(null);
-
-  useEffect(() => {
-    import('@excalidraw/excalidraw').then((mod) => {
-      exportToBlobRef.current = mod.exportToBlob;
-      exportToSvgRef.current = mod.exportToSvg;
-    });
-  }, []);
-
-  // Handle name update
-  const handleNameBlur = () => {
+  // Handle board title rename
+  const handleTitleSubmit = () => {
     setIsEditingTitle(false);
-    if (boardName.trim() && boardName !== board.name) {
-      const currentElements = excalidrawAPI ? excalidrawAPI.getSceneElements() : board.data.elements;
-      const currentAppState = excalidrawAPI ? excalidrawAPI.getAppState() : board.data.appState;
-      saveNow({ elements: currentElements, appState: currentAppState }, boardName.trim());
+    if (!boardName.trim()) {
+      setBoardName(board.name);
+      return;
     }
+    const currentElements = excalidrawAPI ? excalidrawAPI.getSceneElements() : board.data.elements;
+    const currentAppState = excalidrawAPI ? excalidrawAPI.getAppState() : board.data.appState;
+    saveNow(
+      { elements: currentElements, appState: currentAppState },
+      boardName.trim()
+    );
   };
 
-  const lastContentHashRef = useRef<string>('');
+  // Scene elements change handler for Excalidraw
+  const handleChange = (elements: readonly any[], appState: any) => {
+    if (!excalidrawAPI) return;
 
-  // Canvas change listener
-  const handleChange = useCallback(
-    (elements: readonly any[], appState: any, files: any) => {
-      // Filter out deleted elements to optimize payload
-      const cleanElements = elements.filter((el) => !el.isDeleted);
-      const hash = `${cleanElements.length}_${cleanElements.map((el) => `${el.id}:${el.version}:${el.x}:${el.y}`).join(',')}_${appState.viewBackgroundColor}_${boardName}`;
+    // Track selected element for Properties Panel
+    const selectedIds = Object.keys(appState.selectedElementIds || {}).filter(
+      (id) => appState.selectedElementIds[id]
+    );
+    if (selectedIds.length === 1) {
+      const found = elements.find((el) => el.id === selectedIds[0]);
+      setSelectedElement(found || null);
+    } else {
+      setSelectedElement(null);
+    }
 
-      if (hash === lastContentHashRef.current) {
-        return;
-      }
+    const cleanedElements = sanitizeElements(Array.from(elements));
 
-      lastContentHashRef.current = hash;
-      const canvasPayload: CanvasData = {
-        elements: cleanElements,
-        appState: {
-          viewBackgroundColor: appState.viewBackgroundColor || '#090d16',
-          gridSize: appState.gridSize || 20,
-        },
-        files: files || {},
-      };
-      triggerAutosave(canvasPayload, boardName);
-    },
-    [boardName, triggerAutosave]
-  );
+    const { collaborators, ...cleanAppState } = appState || {};
+    triggerAutosave({
+      elements: cleanedElements,
+      appState: cleanAppState,
+    });
+  };
 
   // Export handlers
   const handleExportPNG = async () => {
-    if (!excalidrawAPI || !exportToBlobRef.current) return;
-    const elements = excalidrawAPI.getSceneElements();
-    const appState = excalidrawAPI.getAppState();
-    const files = excalidrawAPI.getFiles();
-
+    if (!excalidrawAPI) return;
     try {
-      const currentBg = appState.viewBackgroundColor || canvasBg || '#090d16';
-      const blob = await exportToBlobRef.current({
+      const { exportToBlob } = await import('@excalidraw/excalidraw');
+      const elements = excalidrawAPI.getSceneElements();
+      const appState = excalidrawAPI.getAppState();
+      const blob = await exportToBlob({
         elements,
-        appState: {
-          ...appState,
-          viewBackgroundColor: currentBg,
-          exportBackground: true,
-          exportPadding: 30,
-        },
-        files,
+        appState,
+        files: excalidrawAPI.getFiles(),
         mimeType: 'image/png',
+        quality: 1,
       });
+
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `${boardName.toLowerCase().replace(/[^a-z0-9]/g, '_')}.png`;
       a.click();
       URL.revokeObjectURL(url);
-    } catch (e) {
-      console.error('PNG Export error:', e);
+    } catch (err) {
+      console.error('Failed to export PNG:', err);
     }
   };
 
   const handleExportSVG = async () => {
-    if (!excalidrawAPI || !exportToSvgRef.current) return;
-    const elements = excalidrawAPI.getSceneElements();
-    const appState = excalidrawAPI.getAppState();
-    const files = excalidrawAPI.getFiles();
-
+    if (!excalidrawAPI) return;
     try {
-      const currentBg = appState.viewBackgroundColor || canvasBg || '#090d16';
-      const svg = await exportToSvgRef.current({
+      const { exportToSvg } = await import('@excalidraw/excalidraw');
+      const elements = excalidrawAPI.getSceneElements();
+      const appState = excalidrawAPI.getAppState();
+      const svg = await exportToSvg({
         elements,
-        appState: {
-          ...appState,
-          viewBackgroundColor: currentBg,
-          exportBackground: true,
-          exportPadding: 30,
-        },
-        files,
+        appState,
+        files: excalidrawAPI.getFiles(),
       });
-      const svgString = new XMLSerializer().serializeToString(svg);
+
+      const serializer = new XMLSerializer();
+      const svgString = serializer.serializeToString(svg);
       const blob = new Blob([svgString], { type: 'image/svg+xml' });
       const url = URL.createObjectURL(blob);
+
       const a = document.createElement('a');
       a.href = url;
       a.download = `${boardName.toLowerCase().replace(/[^a-z0-9]/g, '_')}.svg`;
       a.click();
       URL.revokeObjectURL(url);
-    } catch (e) {
-      console.error('SVG Export error:', e);
+    } catch (err) {
+      console.error('Failed to export SVG:', err);
     }
   };
 
-  // Import handler
+  // Import handler for .ideora / .json
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !excalidrawAPI) return;
 
     try {
-      const parsed = await parseIdeoraFile(file);
+      const { boardName: newName, data } = await parseIdeoraFile(file);
+      if (newName) setBoardName(newName);
+      const sanitized = sanitizeElements(data.elements || []);
       excalidrawAPI.updateScene({
-        elements: parsed.data.elements || [],
-        appState: parsed.data.appState || {},
+        elements: sanitized,
+        appState: data.appState || {},
       });
-      if (parsed.boardName) setBoardName(parsed.boardName);
+      saveNow({ ...data, elements: sanitized }, newName || boardName);
     } catch (err: any) {
-      alert(err.message || 'Error importing file');
+      alert(err.message || 'Error al importar el archivo.');
     }
   };
 
@@ -322,13 +269,59 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
   const handleInsertAIElements = (newElements: any[]) => {
     if (!excalidrawAPI) return;
     const existing = excalidrawAPI.getSceneElements();
+    const sanitizedNew = sanitizeElements(newElements);
     excalidrawAPI.updateScene({
-      elements: [...existing, ...newElements],
+      elements: sanitizeElements([...existing, ...sanitizedNew]),
     });
   };
 
-  // Insert Diagram Palette Shape into Canvas
-  const handleInsertPaletteShape = (shapeId: string) => {
+  // Canvas Container Ref & HTML5 Drag and Drop Handlers
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleCanvasDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  };
+
+  const handleCanvasDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!excalidrawAPI) return;
+    const rawData = e.dataTransfer.getData('application/json');
+    if (!rawData) return;
+
+    try {
+      const payload = JSON.parse(rawData);
+      if (payload.type === 'ideora-shape' && payload.shapeId) {
+        const containerRect = canvasContainerRef.current?.getBoundingClientRect();
+        const clientX = e.clientX - (containerRect?.left || 0);
+        const clientY = e.clientY - (containerRect?.top || 0);
+
+        const appState = excalidrawAPI.getAppState();
+        const zoom = appState.zoom?.value || 1;
+        const dropX = -appState.scrollX + clientX / zoom;
+        const dropY = -appState.scrollY + clientY / zoom;
+
+        const allComps = OFFICIAL_COMPONENT_CATALOG.flatMap((c) => c.items);
+        const comp = allComps.find((c) => c.id === payload.shapeId);
+
+        if (comp) {
+          const existing = excalidrawAPI.getSceneElements();
+          const newElements = sanitizeElements(comp.factory(dropX, dropY));
+          excalidrawAPI.updateScene({
+            elements: sanitizeElements([...existing, ...newElements]),
+            appState: {
+              selectedElementIds: newElements.length > 0 ? { [newElements[0].id]: true } : {},
+            },
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Error handling canvas drop:', err);
+    }
+  };
+
+  // Insert Diagram Palette Shape into Canvas using shape factory
+  const handleInsertPaletteShape = (factory: (cx: number, cy: number, api?: any) => any[]) => {
     if (!excalidrawAPI) return;
     const appState = excalidrawAPI.getAppState();
     const zoom = appState.zoom?.value || 1;
@@ -336,533 +329,239 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
     const cy = -appState.scrollY + (appState.height || 600) / (2 * zoom);
 
     const existing = excalidrawAPI.getSceneElements();
-    const ts = Date.now();
-    let newElements: any[] = [];
+    const rawNewElements = factory(cx, cy, excalidrawAPI);
 
-    switch (shapeId) {
-      case 'basic_rect':
-        newElements = [
-          {
-            id: `rect_${ts}`,
-            type: 'rectangle',
-            x: cx - 70,
-            y: cy - 40,
-            width: 140,
-            height: 80,
-            strokeColor: '#6366f1',
-            backgroundColor: '#1e1b4b',
-            fillStyle: 'solid',
-            strokeWidth: 2,
-            roughness: 1,
-          },
-        ];
-        break;
-
-      case 'basic_round_rect':
-        newElements = [
-          {
-            id: `rrect_${ts}`,
-            type: 'rectangle',
-            x: cx - 70,
-            y: cy - 40,
-            width: 140,
-            height: 80,
-            strokeColor: '#8b5cf6',
-            backgroundColor: '#2e1065',
-            fillStyle: 'solid',
-            roundness: { type: 3 },
-            strokeWidth: 2,
-          },
-        ];
-        break;
-
-      case 'basic_ellipse':
-        newElements = [
-          {
-            id: `ell_${ts}`,
-            type: 'ellipse',
-            x: cx - 50,
-            y: cy - 50,
-            width: 100,
-            height: 100,
-            strokeColor: '#38bdf8',
-            backgroundColor: '#0c4a6e',
-            fillStyle: 'solid',
-            strokeWidth: 2,
-          },
-        ];
-        break;
-
-      case 'basic_diamond':
-        newElements = [
-          {
-            id: `dia_${ts}`,
-            type: 'diamond',
-            x: cx - 60,
-            y: cy - 50,
-            width: 120,
-            height: 100,
-            strokeColor: '#f59e0b',
-            backgroundColor: '#451a03',
-            fillStyle: 'solid',
-            strokeWidth: 2,
-          },
-        ];
-        break;
-
-      case 'basic_text':
-        newElements = [
-          {
-            id: `txt_${ts}`,
-            type: 'text',
-            x: cx - 50,
-            y: cy - 15,
-            width: 100,
-            height: 30,
-            text: 'Text Label',
-            fontSize: 20,
-            strokeColor: '#f8fafc',
-          },
-        ];
-        break;
-
-      case 'basic_arrow':
-        if (excalidrawAPI && typeof excalidrawAPI.setActiveTool === 'function') {
-          excalidrawAPI.setActiveTool({ type: 'arrow' });
-        } else {
-          newElements = [
-            {
-              id: `arr_${ts}`,
-              type: 'arrow',
-              x: cx - 75,
-              y: cy,
-              width: 150,
-              height: 0,
-              points: [[0, 0], [150, 0]],
-              strokeColor: '#a855f7',
-              strokeWidth: 2,
-            },
-          ];
-        }
-        break;
-
-      // SOFTWARE DEVELOPMENT
-      case 'sw_microservice':
-        newElements = [
-          { id: `swms_${ts}`, type: 'rectangle', x: cx - 80, y: cy - 35, width: 160, height: 70, strokeColor: '#a855f7', backgroundColor: '#3b0764', fillStyle: 'solid', roundness: { type: 3 }, strokeWidth: 2 },
-          { id: `swmst_${ts}`, type: 'text', x: cx - 65, y: cy - 10, width: 130, height: 20, text: 'Microservice Node', strokeColor: '#ffffff', fontSize: 13 },
-        ];
-        break;
-
-      case 'sw_api_gateway':
-        newElements = [
-          { id: `swgw_${ts}`, type: 'rectangle', x: cx - 85, y: cy - 35, width: 170, height: 70, strokeColor: '#f43f5e', backgroundColor: '#881337', fillStyle: 'solid', roundness: { type: 3 }, strokeWidth: 2 },
-          { id: `swgwt_${ts}`, type: 'text', x: cx - 65, y: cy - 10, width: 130, height: 20, text: 'API Gateway REST', strokeColor: '#ffffff', fontSize: 13 },
-        ];
-        break;
-
-      case 'sw_terminal':
-        newElements = [
-          { id: `swt_${ts}`, type: 'rectangle', x: cx - 80, y: cy - 40, width: 160, height: 80, strokeColor: '#10b981', backgroundColor: '#022c22', fillStyle: 'solid', strokeWidth: 2 },
-          { id: `swtt_${ts}`, type: 'text', x: cx - 65, y: cy - 20, width: 130, height: 40, text: '$ npm run build\n✓ Success in 2s', strokeColor: '#34d399', fontSize: 12 },
-        ];
-        break;
-
-      case 'sw_db':
-      case 'flow_db':
-      case 'arch_db':
-        newElements = [
-          { id: `fdb_${ts}`, type: 'rectangle', x: cx - 70, y: cy - 45, width: 140, height: 90, strokeColor: '#06b6d4', backgroundColor: '#164e63', fillStyle: 'solid', roundness: { type: 3 }, strokeWidth: 2 },
-          { id: `fdbt_${ts}`, type: 'text', x: cx - 50, y: cy - 10, width: 100, height: 20, text: 'PostgreSQL DB', strokeColor: '#ffffff', fontSize: 14 },
-        ];
-        break;
-
-      // HARDWARE & ARDUINO
-      case 'hw_arduino':
-        newElements = [
-          { id: `ard_${ts}`, type: 'rectangle', x: cx - 90, y: cy - 50, width: 180, height: 100, strokeColor: '#14b8a6', backgroundColor: '#042f2e', fillStyle: 'solid', roundness: { type: 3 }, strokeWidth: 2 },
-          { id: `ardt_${ts}`, type: 'text', x: cx - 75, y: cy - 20, width: 150, height: 40, text: 'Arduino Uno / ESP32\n[GPIO 13 -> HIGH]', strokeColor: '#5eead4', fontSize: 13 },
-        ];
-        break;
-
-      case 'hw_sensor':
-        newElements = [
-          { id: `sen_${ts}`, type: 'ellipse', x: cx - 60, y: cy - 40, width: 120, height: 80, strokeColor: '#f59e0b', backgroundColor: '#451a03', fillStyle: 'solid', strokeWidth: 2 },
-          { id: `sent_${ts}`, type: 'text', x: cx - 45, y: cy - 10, width: 90, height: 20, text: 'Sensor I2C', strokeColor: '#ffffff', fontSize: 13 },
-        ];
-        break;
-
-      case 'hw_actuator':
-        newElements = [
-          { id: `act_${ts}`, type: 'diamond', x: cx - 60, y: cy - 50, width: 120, height: 100, strokeColor: '#ea580c', backgroundColor: '#7c2d12', fillStyle: 'solid', strokeWidth: 2 },
-          { id: `actt_${ts}`, type: 'text', x: cx - 45, y: cy - 10, width: 90, height: 20, text: 'Motor PWM', strokeColor: '#ffffff', fontSize: 13 },
-        ];
-        break;
-
-      case 'hw_chip':
-        newElements = [
-          { id: `chip_${ts}`, type: 'rectangle', x: cx - 70, y: cy - 40, width: 140, height: 80, strokeColor: '#3b82f6', backgroundColor: '#1e3a8a', fillStyle: 'solid', strokeWidth: 2 },
-          { id: `chipt_${ts}`, type: 'text', x: cx - 55, y: cy - 10, width: 110, height: 20, text: 'Microchip IC', strokeColor: '#ffffff', fontSize: 13 },
-        ];
-        break;
-
-      // TELECOM & NETWORKING
-      case 'telecom_router':
-        newElements = [
-          { id: `rtr_${ts}`, type: 'rectangle', x: cx - 80, y: cy - 40, width: 160, height: 80, strokeColor: '#0284c7', backgroundColor: '#0c4a6e', fillStyle: 'solid', roundness: { type: 3 }, strokeWidth: 2 },
-          { id: `rtrt_${ts}`, type: 'text', x: cx - 65, y: cy - 10, width: 130, height: 20, text: 'Router / Switch', strokeColor: '#ffffff', fontSize: 13 },
-        ];
-        break;
-
-      case 'telecom_antenna':
-        newElements = [
-          { id: `ant_${ts}`, type: 'diamond', x: cx - 55, y: cy - 50, width: 110, height: 100, strokeColor: '#6366f1', backgroundColor: '#1e1b4b', fillStyle: 'solid', strokeWidth: 2 },
-          { id: `antt_${ts}`, type: 'text', x: cx - 40, y: cy - 10, width: 80, height: 20, text: 'Antena 5G', strokeColor: '#ffffff', fontSize: 13 },
-        ];
-        break;
-
-      case 'telecom_wifi':
-        newElements = [
-          { id: `wifi_${ts}`, type: 'ellipse', x: cx - 60, y: cy - 40, width: 120, height: 80, strokeColor: '#10b981', backgroundColor: '#064e3b', fillStyle: 'solid', strokeWidth: 2 },
-          { id: `wifit_${ts}`, type: 'text', x: cx - 45, y: cy - 10, width: 90, height: 20, text: 'Wi-Fi / BT', strokeColor: '#ffffff', fontSize: 13 },
-        ];
-        break;
-
-      case 'telecom_firewall':
-        newElements = [
-          { id: `fw_${ts}`, type: 'rectangle', x: cx - 75, y: cy - 35, width: 150, height: 70, strokeColor: '#e11d48', backgroundColor: '#4c0519', fillStyle: 'solid', strokeWidth: 2 },
-          { id: `fwt_${ts}`, type: 'text', x: cx - 55, y: cy - 10, width: 110, height: 20, text: 'Firewall Net', strokeColor: '#ffffff', fontSize: 13 },
-        ];
-        break;
-
-      // AI & DATA
-      case 'ai_model':
-        newElements = [
-          { id: `aim_${ts}`, type: 'rectangle', x: cx - 90, y: cy - 45, width: 180, height: 90, strokeColor: '#a855f7', backgroundColor: '#3b0764', fillStyle: 'solid', roundness: { type: 3 }, strokeWidth: 2 },
-          { id: `aimt_${ts}`, type: 'text', x: cx - 75, y: cy - 15, width: 150, height: 30, text: 'Modelo LLM / IA\n[GPT-4o / Gem]', strokeColor: '#f3e8ff', fontSize: 13 },
-        ];
-        break;
-
-      case 'ai_agent':
-        newElements = [
-          { id: `aia_${ts}`, type: 'rectangle', x: cx - 80, y: cy - 40, width: 160, height: 80, strokeColor: '#ec4899', backgroundColor: '#831843', fillStyle: 'solid', roundness: { type: 3 }, strokeWidth: 2 },
-          { id: `aiat_${ts}`, type: 'text', x: cx - 65, y: cy - 10, width: 130, height: 20, text: 'Agente Autónomo', strokeColor: '#ffffff', fontSize: 13 },
-        ];
-        break;
-
-      case 'ai_pipeline':
-        newElements = [
-          { id: `aip_${ts}`, type: 'rectangle', x: cx - 85, y: cy - 35, width: 170, height: 70, strokeColor: '#059669', backgroundColor: '#064e3b', fillStyle: 'solid', strokeWidth: 2 },
-          { id: `aipt_${ts}`, type: 'text', x: cx - 70, y: cy - 10, width: 140, height: 20, text: 'ETL / Data Pipeline', strokeColor: '#ffffff', fontSize: 13 },
-        ];
-        break;
-
-      // CLOUD & ARCHITECTURE
-      case 'arch_cloud':
-        newElements = [
-          { id: `acld_${ts}`, type: 'ellipse', x: cx - 80, y: cy - 40, width: 160, height: 80, strokeColor: '#38bdf8', backgroundColor: '#075985', fillStyle: 'solid', strokeWidth: 2 },
-          { id: `acldt_${ts}`, type: 'text', x: cx - 60, y: cy - 10, width: 120, height: 20, text: 'Cloud AWS / GCP', strokeColor: '#ffffff', fontSize: 14 },
-        ];
-        break;
-
-      case 'arch_server':
-        newElements = [
-          { id: `asrv_${ts}`, type: 'rectangle', x: cx - 75, y: cy - 40, width: 150, height: 80, strokeColor: '#6366f1', backgroundColor: '#1e1b4b', fillStyle: 'solid', strokeWidth: 2 },
-          { id: `asrvt_${ts}`, type: 'text', x: cx - 55, y: cy - 10, width: 110, height: 20, text: 'Servidor Linux VPS', strokeColor: '#ffffff', fontSize: 14 },
-        ];
-        break;
-
-      case 'arch_s3':
-        newElements = [
-          { id: `s3_${ts}`, type: 'rectangle', x: cx - 75, y: cy - 40, width: 150, height: 80, strokeColor: '#d97706', backgroundColor: '#451a03', fillStyle: 'solid', strokeWidth: 2 },
-          { id: `s3t_${ts}`, type: 'text', x: cx - 55, y: cy - 10, width: 110, height: 20, text: 'Bucket S3 Storage', strokeColor: '#ffffff', fontSize: 13 },
-        ];
-        break;
-
-      // UML & CLASS DIAGRAMS
-      case 'uml_class':
-        newElements = [
-          { id: `uhead_${ts}`, type: 'rectangle', x: cx - 100, y: cy - 80, width: 200, height: 40, strokeColor: '#ec4899', backgroundColor: '#831843', fillStyle: 'solid', strokeWidth: 2 },
-          { id: `uheadt_${ts}`, type: 'text', x: cx - 80, y: cy - 70, width: 160, height: 20, text: 'User', strokeColor: '#ffffff', fontSize: 16 },
-          { id: `ubody_${ts}`, type: 'rectangle', x: cx - 100, y: cy - 40, width: 200, height: 110, strokeColor: '#ec4899', backgroundColor: '#500724', fillStyle: 'solid', strokeWidth: 2 },
-          { id: `ubodyt_${ts}`, type: 'text', x: cx - 90, y: cy - 30, width: 180, height: 90, text: '+ id: string\n+ email: string\n------------------\n+ login(): void\n+ logout(): void', strokeColor: '#fbcfe8', fontSize: 12 },
-        ];
-        break;
-
-      case 'uml_interface':
-        newElements = [
-          { id: `uif_${ts}`, type: 'rectangle', x: cx - 90, y: cy - 65, width: 180, height: 130, strokeColor: '#a855f7', backgroundColor: '#3b0764', fillStyle: 'solid', strokeWidth: 2 },
-          { id: `uift_${ts}`, type: 'text', x: cx - 80, y: cy - 55, width: 160, height: 110, text: '«interface»\nIService\n------------------\n+ execute(): void\n+ reset(): boolean', strokeColor: '#f3e8ff', fontSize: 13 },
-        ];
-        break;
-
-      case 'uml_actor':
-        newElements = [
-          { id: `uact_head_${ts}`, type: 'ellipse', x: cx - 18, y: cy - 50, width: 36, height: 36, strokeColor: '#10b981', backgroundColor: '#064e3b', fillStyle: 'solid', strokeWidth: 2 },
-          { id: `uact_body_${ts}`, type: 'line', x: cx, y: cy - 14, width: 0, height: 35, points: [[0, 0], [0, 35]], strokeColor: '#10b981', strokeWidth: 2 },
-          { id: `uact_arms_${ts}`, type: 'line', x: cx - 25, y: cy, width: 50, height: 0, points: [[0, 0], [50, 0]], strokeColor: '#10b981', strokeWidth: 2 },
-          { id: `uact_legs_${ts}`, type: 'line', x: cx - 20, y: cy + 21, width: 40, height: 25, points: [[0, 0], [20, 25], [40, 0]], strokeColor: '#10b981', strokeWidth: 2 },
-          { id: `uact_txt_${ts}`, type: 'text', x: cx - 35, y: cy + 50, width: 70, height: 20, text: 'User / Actor', strokeColor: '#ffffff', fontSize: 12 },
-        ];
-        break;
-
-      case 'uml_usecase':
-        newElements = [
-          { id: `uuc_${ts}`, type: 'ellipse', x: cx - 75, y: cy - 35, width: 150, height: 70, strokeColor: '#10b981', backgroundColor: '#064e3b', fillStyle: 'solid', strokeWidth: 2 },
-          { id: `uuct_${ts}`, type: 'text', x: cx - 55, y: cy - 10, width: 110, height: 20, text: 'Authenticate User', strokeColor: '#ffffff', fontSize: 13 },
-        ];
-        break;
-
-      case 'uml_package':
-        newElements = [
-          { id: `upkg_tab_${ts}`, type: 'rectangle', x: cx - 90, y: cy - 65, width: 60, height: 20, strokeColor: '#6366f1', backgroundColor: '#312e81', fillStyle: 'solid', strokeWidth: 2 },
-          { id: `upkg_body_${ts}`, type: 'rectangle', x: cx - 90, y: cy - 45, width: 180, height: 90, strokeColor: '#6366f1', backgroundColor: '#1e1b4b', fillStyle: 'solid', strokeWidth: 2 },
-          { id: `upkg_t_${ts}`, type: 'text', x: cx - 75, y: cy - 25, width: 150, height: 20, text: 'pkg: AuthModule', strokeColor: '#ffffff', fontSize: 14 },
-        ];
-        break;
-
-      // ARCHITECTURE
-      case 'arch_cloud':
-        newElements = [
-          { id: `acld_${ts}`, type: 'ellipse', x: cx - 80, y: cy - 40, width: 160, height: 80, strokeColor: '#38bdf8', backgroundColor: '#075985', fillStyle: 'solid', strokeWidth: 2 },
-          { id: `acldt_${ts}`, type: 'text', x: cx - 60, y: cy - 10, width: 120, height: 20, text: 'Cloud Services', strokeColor: '#ffffff', fontSize: 14 },
-        ];
-        break;
-
-      case 'arch_gateway':
-        newElements = [
-          { id: `agw_${ts}`, type: 'rectangle', x: cx - 85, y: cy - 35, width: 170, height: 70, strokeColor: '#f43f5e', backgroundColor: '#881337', fillStyle: 'solid', roundness: { type: 3 }, strokeWidth: 2 },
-          { id: `agwt_${ts}`, type: 'text', x: cx - 65, y: cy - 10, width: 130, height: 20, text: 'API Gateway', strokeColor: '#ffffff', fontSize: 15 },
-        ];
-        break;
-
-      case 'arch_microservice':
-        newElements = [
-          { id: `ams_${ts}`, type: 'rectangle', x: cx - 75, y: cy - 35, width: 150, height: 70, strokeColor: '#8b5cf6', backgroundColor: '#4c1d95', fillStyle: 'solid', roundness: { type: 3 }, strokeWidth: 2 },
-          { id: `amst_${ts}`, type: 'text', x: cx - 55, y: cy - 10, width: 110, height: 20, text: 'Auth Service', strokeColor: '#ffffff', fontSize: 14 },
-        ];
-        break;
-
-      case 'arch_server':
-        newElements = [
-          { id: `asrv_${ts}`, type: 'rectangle', x: cx - 75, y: cy - 40, width: 150, height: 80, strokeColor: '#6366f1', backgroundColor: '#1e1b4b', fillStyle: 'solid', strokeWidth: 2 },
-          { id: `asrvt_${ts}`, type: 'text', x: cx - 55, y: cy - 10, width: 110, height: 20, text: 'Node App Server', strokeColor: '#ffffff', fontSize: 14 },
-        ];
-        break;
-
-      default:
-        break;
-    }
-
-    if (newElements.length > 0) {
+    if (Array.isArray(rawNewElements) && rawNewElements.length > 0) {
+      const newElements = sanitizeElements(rawNewElements);
       excalidrawAPI.updateScene({
-        elements: [...existing, ...newElements],
+        elements: sanitizeElements([...existing, ...newElements]),
+        appState: {
+          selectedElementIds: newElements.length > 0 ? { [newElements[0].id]: true } : {},
+        },
       });
     }
   };
 
+  // Apply properties update from Properties Panel
+  const handleUpdateSelectedElement = (updatedProps: Record<string, any>) => {
+    if (!excalidrawAPI || !selectedElement) return;
+    const elements = excalidrawAPI.getSceneElements();
+    const updated = elements.map((el: any) => {
+      if (el.id === selectedElement.id) {
+        return { ...el, ...updatedProps, updated: Date.now() };
+      }
+      if (el.containerId === selectedElement.id && updatedProps.text !== undefined) {
+        return { ...el, text: updatedProps.text, originalText: updatedProps.text, updated: Date.now() };
+      }
+      return el;
+    });
+    excalidrawAPI.updateScene({ elements: sanitizeElements(updated) });
+  };
+
+  // Apply template to canvas
+  const handleSelectTemplate = (template: DiagramTemplate) => {
+    if (!excalidrawAPI) return;
+    const existing = excalidrawAPI.getSceneElements();
+    const tplElements = sanitizeElements(template.factory());
+    excalidrawAPI.updateScene({
+      elements: sanitizeElements([...existing, ...tplElements]),
+    });
+  };
+
+  // Import Excalidraw library items into canvas
+  const handleImportLibraryItems = (items: any[]) => {
+    if (!excalidrawAPI) return;
+    const existing = excalidrawAPI.getSceneElements();
+    const libElements: any[] = [];
+    let startX = 150;
+    items.forEach((item, idx) => {
+      const itemEls = item.elements || [item];
+      itemEls.forEach((el: any) => {
+        libElements.push({
+          ...el,
+          id: `lib_${idx}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          x: (el.x || 0) + startX,
+          y: (el.y || 0) + 200,
+        });
+      });
+      startX += 220;
+    });
+
+    const sanitizedLib = sanitizeElements(libElements);
+    excalidrawAPI.updateScene({
+      elements: sanitizeElements([...existing, ...sanitizedLib]),
+    });
+  };
+
   return (
-    <div className="relative w-screen h-screen overflow-hidden flex flex-col bg-slate-950 text-slate-100">
-      {/* IDEORA CUSTOM TOP HEADER BAR */}
-      <header className="z-30 h-14 w-full glass-panel border-b border-white/10 px-4 flex items-center justify-between shrink-0 select-none">
-        {/* Left Section: Back, Title & Workspace */}
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-950 text-slate-100 font-sans select-none">
+      {/* HEADER BAR */}
+      <header className="h-14 shrink-0 glass-panel border-b border-white/10 px-4 flex items-center justify-between z-30 bg-slate-900/80 backdrop-blur-md">
+        {/* Left Section: Back Button & Title */}
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard"
-            className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-1.5 text-xs font-semibold"
-            title="Back to Dashboard"
+            className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors flex items-center gap-1.5 text-xs font-semibold"
           >
-            <ArrowLeft className="w-4 h-4 text-indigo-400" />
+            <ArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">Dashboard</span>
           </Link>
 
-          <div className="h-5 w-px bg-white/10" />
+          <div className="h-4 w-px bg-white/10" />
 
+          {/* Editable Board Title */}
           <div className="flex items-center gap-2">
             {isEditingTitle ? (
               <input
                 type="text"
                 value={boardName}
                 onChange={(e) => setBoardName(e.target.value)}
-                onBlur={handleNameBlur}
-                onKeyDown={(e) => e.key === 'Enter' && handleNameBlur()}
-                className="bg-slate-900 px-2 py-1 text-sm font-bold text-white rounded border border-indigo-500 focus:outline-none"
+                onBlur={handleTitleSubmit}
+                onKeyDown={(e) => e.key === 'Enter' && handleTitleSubmit()}
                 autoFocus
+                className="px-2 py-1 rounded-lg glass-input text-sm font-bold text-white outline-none focus:ring-2 focus:ring-indigo-500"
               />
             ) : (
               <h1
                 onClick={() => setIsEditingTitle(true)}
-                className="text-sm sm:text-base font-bold text-white hover:text-indigo-300 cursor-pointer px-2 py-1 rounded hover:bg-white/5 transition-colors line-clamp-1"
-                title="Click to rename"
+                className="text-sm font-bold text-slate-100 hover:text-white cursor-pointer px-2 py-1 rounded-lg hover:bg-white/5 transition-colors flex items-center gap-2"
+                title="Hacer clic para renombrar"
               >
-                {boardName}
+                <span>{boardName}</span>
+                {workspace && (
+                  <span
+                    className="px-2 py-0.5 rounded-full text-[10px] font-semibold border"
+                    style={{
+                      backgroundColor: `${workspace.color || '#6366f1'}20`,
+                      borderColor: `${workspace.color || '#6366f1'}40`,
+                      color: workspace.color || '#818cf8',
+                    }}
+                  >
+                    {workspace.name}
+                  </span>
+                )}
               </h1>
             )}
 
-            {workspace && (
-              <span
-                className="hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium text-slate-300 bg-slate-900 border border-white/10"
-                style={{ borderLeftColor: workspace.color || '#6366f1', borderLeftWidth: '3px' }}
-              >
-                {workspace.name}
-              </span>
-            )}
-
+            {/* Favorite Button */}
             <button
               onClick={() => onToggleFavorite(board.id)}
-              className={`p-1.5 rounded-lg transition-colors ${
-                board.isFavorite ? 'text-amber-400' : 'text-slate-500 hover:text-slate-300'
-              }`}
-              title="Toggle Favorite"
+              className="p-1 text-slate-400 hover:text-amber-400 transition-colors"
+              title={board.isFavorite ? 'Quitar de Favoritos' : 'Agregar a Favoritos'}
             >
-              <Star className="w-4 h-4 fill-current" />
+              <Star
+                className={`w-4 h-4 ${
+                  board.isFavorite ? 'text-amber-400 fill-amber-400' : ''
+                }`}
+              />
             </button>
           </div>
         </div>
 
-        {/* Center Section: Auto-save status badge */}
-        <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full text-xs bg-slate-900/80 border border-white/10">
+        {/* Center Section: Autosave Status */}
+        <div className="hidden md:flex items-center gap-2 text-xs text-slate-400 bg-slate-950/60 px-3 py-1 rounded-full border border-white/5">
           {saveStatus === 'saving' && (
             <>
-              <Loader2 className="w-3.5 h-3.5 text-amber-400 animate-spin" />
-              <span className="text-amber-300 font-medium">{t('editor_saving')}</span>
+              <Loader2 className="w-3.5 h-3.5 text-indigo-400 animate-spin" />
+              <span>Guardando...</span>
             </>
           )}
-          {(saveStatus === 'synced' || saveStatus === 'idle') && (
+          {saveStatus === 'synced' && (
             <>
               <Check className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-slate-300">{t('editor_saved')}</span>
+              <span className="text-emerald-400/90 font-medium">Guardado en tiempo real</span>
             </>
           )}
           {saveStatus === 'error' && (
             <>
               <AlertCircle className="w-3.5 h-3.5 text-rose-400" />
-              <span className="text-rose-400 font-medium">{t('editor_save_error')}</span>
+              <span className="text-rose-400 font-medium">Error al guardar</span>
             </>
           )}
         </div>
 
-        {/* Right Section: Language, AI, Drive, Export, Import */}
+        {/* Right Section: Controls & Modals */}
         <div className="flex items-center gap-2">
-          {/* Canvas Background Color Picker (Presets: Dark, White + Custom Picker) */}
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-white/5 border border-white/10 text-xs" title="Cambiar color de fondo del lienzo">
-            <Palette className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="hidden xl:inline text-[11px] text-slate-400 font-medium">Fondo:</span>
-            
-            {/* Dark Preset */}
-            <button
-              type="button"
-              onClick={() => handleCanvasBgChange('#090d16')}
-              className={`w-4 h-4 rounded-full bg-[#090d16] border transition-transform hover:scale-110 ${
-                canvasBg === '#090d16' ? 'ring-2 ring-indigo-500 border-white' : 'border-white/30'
-              }`}
-              title="Fondo Oscuro Base (#090d16)"
-            />
-
-            {/* White Preset */}
-            <button
-              type="button"
-              onClick={() => handleCanvasBgChange('#ffffff')}
-              className={`w-4 h-4 rounded-full bg-white border transition-transform hover:scale-110 ${
-                canvasBg === '#ffffff' ? 'ring-2 ring-indigo-500 border-slate-400' : 'border-slate-300'
-              }`}
-              title="Fondo Blanco Base (#ffffff)"
-            />
-
-            {/* Custom Color Picker */}
-            <label className="relative flex items-center justify-center w-4 h-4 rounded-full overflow-hidden border border-white/40 cursor-pointer hover:scale-110 transition-transform" title="Seleccionar cualquier color personalizado">
+          {/* Canvas Color Selector: Custom Color Picker (Palette), Negro, Blanco */}
+          <div className="flex items-center gap-1.5 bg-slate-950/70 p-1.5 rounded-xl border border-white/10">
+            {/* Custom Color Picker Button */}
+            <label className="relative flex items-center justify-center cursor-pointer p-1 rounded-lg hover:bg-white/10 transition-colors" title="Buscar color de preferencia">
+              <Palette className="w-4 h-4 text-indigo-400" />
               <input
                 type="color"
                 value={canvasBg}
                 onChange={(e) => handleCanvasBgChange(e.target.value)}
-                className="absolute -top-2 -left-2 w-8 h-8 cursor-pointer opacity-0"
+                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
               />
-              <div className="w-full h-full rounded-full" style={{ backgroundColor: canvasBg }} />
             </label>
-          </div>
 
-          {/* Language Switcher */}
-          <button
-            onClick={() => setLanguage(language === 'en' ? 'es' : 'en')}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-all"
-            title="Switch Language / Cambiar Idioma"
-          >
-            <Globe className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="uppercase">{language === 'en' ? 'EN' : 'ES'}</span>
-          </button>
+            {/* Circulo 1: Negro (#121212) */}
+            <button
+              onClick={() => handleCanvasBgChange('#121212')}
+              className={`w-4 h-4 rounded-full border border-white/30 transition-transform ${
+                canvasBg === '#121212' ? 'scale-125 ring-2 ring-indigo-500' : 'hover:scale-110'
+              }`}
+              style={{ backgroundColor: '#121212' }}
+              title="Fondo Negro (#121212)"
+            />
+
+            {/* Circulo 2: Blanco (#ffffff) */}
+            <button
+              onClick={() => handleCanvasBgChange('#ffffff')}
+              className={`w-4 h-4 rounded-full border border-white/30 transition-transform ${
+                canvasBg === '#ffffff' ? 'scale-125 ring-2 ring-indigo-500' : 'hover:scale-110'
+              }`}
+              style={{ backgroundColor: '#ffffff' }}
+              title="Fondo Blanco (#ffffff)"
+            />
+          </div>
 
           {/* AI Generator Button */}
           <button
             onClick={() => setIsAIModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 shadow-md shadow-indigo-600/30 transition-all hover:scale-105"
-            title="Generate diagram with Artificial Intelligence"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold text-xs shadow-lg shadow-purple-600/20 transition-all hover:scale-105 active:scale-95"
           >
-            <Wand2 className="w-3.5 h-3.5 animate-pulse" />
-            <span className="hidden md:inline">{t('editor_ai_btn')}</span>
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Generate with AI</span>
           </button>
 
           {/* Google Drive Button */}
           <button
             onClick={() => setIsGDriveModalOpen(true)}
-            className="p-2 text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-colors border border-white/10"
-            title={t('editor_gdrive_tooltip')}
+            className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors"
+            title="Sincronizar con Google Drive"
           >
-            <Cloud className="w-4 h-4 text-blue-400" />
+            <Cloud className="w-4 h-4 text-sky-400" />
           </button>
 
-          {/* Import Button */}
-          <label
-            className="p-2 text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-colors border border-white/10 cursor-pointer"
-            title={t('editor_import_tooltip')}
-          >
-            <Upload className="w-4 h-4 text-emerald-400" />
-            <input
-              type="file"
-              accept=".ideora,.json"
-              onChange={handleImportFile}
-              className="hidden"
-            />
-          </label>
-
-          {/* Export Dropdown */}
+          {/* Export Dropdown Menu */}
           <div className="relative">
             <button
               onClick={() => setExportMenuOpen(!exportMenuOpen)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-100 bg-slate-800 hover:bg-slate-700 border border-white/10 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass-panel hover:bg-white/10 text-xs font-semibold transition-colors"
             >
               <Download className="w-3.5 h-3.5 text-indigo-400" />
-              <span>{t('editor_export_btn')}</span>
+              <span>Exportar</span>
             </button>
 
             {exportMenuOpen && (
               <>
-                <div className="fixed inset-0 z-40" onClick={() => setExportMenuOpen(false)} />
-                <div className="absolute right-0 top-10 z-50 w-52 glass-panel rounded-2xl py-2 shadow-2xl border border-white/10 text-xs space-y-1">
-                  <button
-                    onClick={() => {
-                      setExportMenuOpen(false);
-                      exportToIdeoraFile(boardName, excalidrawAPI ? { elements: excalidrawAPI.getSceneElements(), appState: excalidrawAPI.getAppState() } : board.data);
-                    }}
-                    className="w-full text-left flex items-center gap-2.5 px-3 py-2 text-slate-200 hover:bg-indigo-600/20 hover:text-white"
-                  >
-                    <Sparkles className="w-4 h-4 text-indigo-400" />
-                    <div>
-                      <div className="font-semibold">Ideora File (.ideora)</div>
-                      <div className="text-[10px] text-slate-400">Native format</div>
-                    </div>
-                  </button>
-
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setExportMenuOpen(false)}
+                />
+                <div className="absolute right-0 mt-2 w-48 glass-panel rounded-2xl border border-white/10 shadow-2xl p-1.5 z-50 bg-slate-900/90 text-xs space-y-1">
                   <button
                     onClick={() => {
                       setExportMenuOpen(false);
                       handleExportPNG();
                     }}
-                    className="w-full text-left flex items-center gap-2.5 px-3 py-2 text-slate-200 hover:bg-white/5"
+                    className="w-full text-left flex items-center gap-2.5 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-xl"
                   >
-                    <FileImage className="w-4 h-4 text-emerald-400" />
+                    <FileImage className="w-4 h-4 text-sky-400" />
                     <div>
-                      <div className="font-semibold">PNG Image</div>
-                      <div className="text-[10px] text-slate-400">For docs & presentations</div>
+                      <div className="font-semibold">Imagen PNG</div>
+                      <div className="text-[10px] text-slate-400">Alta resolución HD</div>
                     </div>
                   </button>
 
@@ -871,12 +570,12 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
                       setExportMenuOpen(false);
                       handleExportSVG();
                     }}
-                    className="w-full text-left flex items-center gap-2.5 px-3 py-2 text-slate-200 hover:bg-white/5"
+                    className="w-full text-left flex items-center gap-2.5 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-xl"
                   >
                     <FileImage className="w-4 h-4 text-amber-400" />
                     <div>
-                      <div className="font-semibold">SVG Vector</div>
-                      <div className="text-[10px] text-slate-400">Scalable graphics</div>
+                      <div className="font-semibold">SVG Vectorial</div>
+                      <div className="text-[10px] text-slate-400">Gráfico escalable</div>
                     </div>
                   </button>
 
@@ -885,12 +584,12 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
                       setExportMenuOpen(false);
                       exportToJsonFile(boardName, excalidrawAPI ? { elements: excalidrawAPI.getSceneElements(), appState: excalidrawAPI.getAppState() } : board.data);
                     }}
-                    className="w-full text-left flex items-center gap-2.5 px-3 py-2 text-slate-200 hover:bg-white/5"
+                    className="w-full text-left flex items-center gap-2.5 px-3 py-2 text-slate-200 hover:bg-white/5 rounded-xl"
                   >
                     <FileCode className="w-4 h-4 text-violet-400" />
                     <div>
-                      <div className="font-semibold">JSON Data</div>
-                      <div className="text-[10px] text-slate-400">Raw data structure</div>
+                      <div className="font-semibold">Estructura JSON</div>
+                      <div className="text-[10px] text-slate-400">Formato datos Ideora</div>
                     </div>
                   </button>
                 </div>
@@ -902,11 +601,17 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
 
       {/* INFINITE CANVAS AREA WITH FIXED DIAGRAM PALETTE */}
       <div className="flex flex-1 w-full h-[calc(100vh-3.5rem)] relative overflow-hidden">
-        {/* Left Diagram Shapes Library Sidebar (Draw.io style) */}
+        {/* Draw.io Style Diagram Palette */}
         <DiagramPalette onInsertShape={handleInsertPaletteShape} />
 
-        {/* Excalidraw Canvas Area */}
-        <div className="flex-1 h-full relative overflow-hidden transition-colors duration-200" style={{ backgroundColor: canvasBg }}>
+        {/* Excalidraw Canvas Area with Drag & Drop */}
+        <div
+          ref={canvasContainerRef}
+          onDragOver={handleCanvasDragOver}
+          onDrop={handleCanvasDrop}
+          className="flex-1 h-full relative overflow-hidden transition-colors duration-200"
+          style={{ backgroundColor: canvasBg }}
+        >
           <Excalidraw
             excalidrawAPI={(api: any) => setExcalidrawAPI(api)}
             initialData={initialData}
@@ -937,6 +642,20 @@ export function CanvasEditor({ board, workspace, onToggleFavorite }: CanvasEdito
         isOpen={isGDriveModalOpen}
         onClose={() => setIsGDriveModalOpen(false)}
         boardName={boardName}
+      />
+
+      {/* Templates Selection Modal */}
+      <TemplatesModal
+        isOpen={isTemplatesOpen}
+        onClose={() => setIsTemplatesOpen(false)}
+        onSelectTemplate={handleSelectTemplate}
+      />
+
+      {/* Excalidraw Libraries Modal */}
+      <LibraryModal
+        isOpen={isLibrariesOpen}
+        onClose={() => setIsLibrariesOpen(false)}
+        onImportLibraryItems={handleImportLibraryItems}
       />
     </div>
   );
